@@ -1,46 +1,23 @@
-"""Chirp Z-transform."""
+"""Chirp Z-transform.
+
+Main reference:
+
+    Sukhoy, V., Stoytchev, A. Generalizing the inverse FFT off the unit 
+    circle. Sci Rep 9, 14443 (2019). 
+    https://doi.org/10.1038/s41598-019-50234-9
+
+"""
 
 import numpy as np
 from scipy.linalg import toeplitz
-
-
-def czt_simple(x, M=None, W=None, A=1.0):
-    """Simple Chirp Z-transform algorithm.
-
-    Direct implementation. Brute force.
-
-    Used to compare against czt in tests.
-
-    Args:
-        x (np.ndarray): input array
-        M (int): length of output array
-        W (complex): complex ratio between points
-        A (complex): complex starting point
-
-    Returns:
-        np.ndarray: Chirp Z-transform
-
-    """
-    
-    N = len(x)
-    if M is None:
-        M = N
-    if W is None:
-        W = np.exp(1j * 2 * np.pi / M)
-    
-    k = np.arange(M)
-    X = np.zeros(M, dtype=complex)
-    z = A * W ** -k
-    for n in range(N):
-        X += x[n] * z ** -n
-    
-    return X
 
 
 def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
     """Calculate Chirp Z-transform.
 
     Using an efficient algorithm. Solves in O(n log n) time.
+
+    See algorithm 1 in Sukhoy & Stoytchev 2019 (full reference in README).
 
     Args:
         x (np.ndarray): input array
@@ -64,17 +41,9 @@ def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
     if W is None:
         W = np.exp(1j * 2 * np.pi / M)
         
-    # X = np.zeros(N, dtype=complex)
-    # r = np.zeros(N, dtype=complex)
-    # c = np.zeros(M, dtype=complex)
-    # for k in range(N):
-    #     X[k] = W ** (k ** 2 / 2) * A ** -k * x[k]
-    #     r[k] = W ** (-k ** 2 / 2)
     k = np.arange(N)
     X = W ** (k ** 2 / 2) * A ** -k * x
     r = W ** (-(k ** 2) / 2)
-    # for k in range(M):
-    #     c[k] = W ** (-k ** 2 / 2)
     k = np.arange(M)
     c = W ** (-(k ** 2) / 2)
     if t_method.lower() == 'ce':
@@ -137,6 +106,41 @@ def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
 
 #     return x
 
+
+def czt_simple(x, M=None, W=None, A=1.0):
+    """Simple Chirp Z-transform algorithm.
+
+    Direct implementation. Brute force.
+
+    Used to compare against czt in tests.
+
+    Args:
+        x (np.ndarray): input array
+        M (int): length of output array
+        W (complex): complex ratio between points
+        A (complex): complex starting point
+
+    Returns:
+        np.ndarray: Chirp Z-transform
+
+    """
+    
+    N = len(x)
+    if M is None:
+        M = N
+    if W is None:
+        W = np.exp(1j * 2 * np.pi / M)
+    
+    k = np.arange(M)
+    X = np.zeros(M, dtype=complex)
+    z = A * W ** -k
+    for n in range(N):
+        X += x[n] * z ** -n
+    
+    return X
+
+
+# FREQ <--> TIME DOMAIN CONVERSION -------------------------------------------
 
 def time_to_freq_domain(t, x, f=None):
 
