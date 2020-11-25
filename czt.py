@@ -143,49 +143,82 @@ def czt_simple(x, M=None, W=None, A=1.0):
 # FREQ <--> TIME DOMAIN CONVERSION -------------------------------------------
 
 def time_to_freq_domain(t, x, f=None):
+    """Convert signal from time domain to frequency domain.
 
+    Args:
+        t (np.ndarray): time
+        x (np.ndarray): time-domain signal
+        f (np.ndarray): frequency for output signal
+
+    Returns:
+        np.ndarray: frequency-domain signal
+
+    """
+
+    # Input time
     dt = t[1] - t[0]
     t1 = t.min()
     t2 = t.max()
     N = len(t)
     Fs = 1 / dt
 
+    # Output frequency
     if f is None:
         f = np.linspace(0, Fs / 2, N)
-
     df = f[1] - f[0]
     f1 = f.min()
     f2 = f.max()
     M  = len(f)
 
+    # Step
     W = np.exp(-1j * 2 * np.pi * dt * df)
+
+    # Starting point
     A = np.exp(1j * 2 * np.pi * f1 * dt)
 
+    # Frequency-domain transform
     freq_data = czt(x, M, W, A) * dt
 
     return f, freq_data
 
 
 def freq_to_time_domain(f, X, t=None):
+    """Convert signal from frequency domain to time domain.
 
+    Args:
+        f (np.ndarray): frequency
+        X (np.ndarray): frequency-domain signal
+        t (np.ndarray): time for output signal
+
+    Returns:
+        np.ndarray: time-domain signal
+
+    """
+
+    # Input frequency
     df = f[1] - f[0]
     f1 = f.min()
     f2 = f.max()
     M = len(f)
     
+    # Output time
     if t is None:
         t = np.linspace(0, 1 / 2 / f2 * len(f), len(f))
-
     dt = t[1] - t[0]
     t1 = t.min()
     t2 = t.max()
     N = len(t)
 
+    # Step
     W = np.exp(-1j * 2 * np.pi * dt * df)
+
+    # Starting point
     A = np.exp(1j * 2 * np.pi * f1 * dt)
 
+    # Time-domain transform
     time_data = np.conj(czt(np.conj(2 * X), N, W, A)) * df
 
+    # Correct phase (in case f1 is not zero)
     time_data = time_data * np.exp(1j * 2 * np.pi * f1 * np.arange(N) * dt)
 
     return t, time_data
