@@ -39,7 +39,7 @@ def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
     if M is None:
         M = N
     if W is None:
-        W = np.exp(1j * 2 * np.pi / M)
+        W = np.exp(2j * np.pi / M)
         
     k = np.arange(N)
     X = W ** (k ** 2 / 2) * A ** -k * x
@@ -67,7 +67,7 @@ def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
 #     if N is None:
 #         N = M
 #     if W is None:
-#         W = np.exp(1j * 2 * np.pi / M)
+#         W = np.exp(2j * np.pi / M)
 
 #     assert M == N
 #     n = N
@@ -129,7 +129,7 @@ def czt_simple(x, M=None, W=None, A=1.0):
     if M is None:
         M = N
     if W is None:
-        W = np.exp(1j * 2 * np.pi / M)
+        W = np.exp(2j * np.pi / M)
     
     k = np.arange(M)
     X = np.zeros(M, dtype=complex)
@@ -156,28 +156,27 @@ def time_to_freq_domain(t, x, f=None):
     """
 
     # Input time
-    dt = t[1] - t[0]
-    t1 = t.min()
-    t2 = t.max()
-    N = len(t)
-    Fs = 1 / dt
+    t1, t2 = t.min(), t.max()  # start / stop time
+    dt = t[1] - t[0]           # time step
+    Nt = len(t)                # number of time points
+    Fs = 1 / dt                # sampling frequency
 
     # Output frequency
     if f is None:
-        f = np.linspace(0, Fs / 2, N)
-    df = f[1] - f[0]
-    f1 = f.min()
-    f2 = f.max()
-    M  = len(f)
+        f = np.linspace(0, Fs / 2, Nt)
+    f1, f2 = f.min(), f.max()  # start / stop
+    df = f[1] - f[0]           # frequency step
+    bw = f2 - f1               # bandwidth
+    Nf = len(f)                # number of frequency points
 
     # Step
-    W = np.exp(-1j * 2 * np.pi * dt * df)
+    W = np.exp(-2j * np.pi * bw / Nf / Fs)
 
     # Starting point
-    A = np.exp(1j * 2 * np.pi * f1 * dt)
+    A = np.exp(2j * np.pi * f1 / Fs)
 
     # Frequency-domain transform
-    freq_data = czt(x, M, W, A) * dt
+    freq_data = czt(x, Nf, W, A) #* dt
 
     return f, freq_data
 
@@ -196,32 +195,36 @@ def freq_to_time_domain(f, X, t=None):
     """
 
     # Input frequency
-    df = f[1] - f[0]
-    f1 = f.min()
-    f2 = f.max()
-    M = len(f)
-    
+    f1, f2 = f.min(), f.max()  # start / stop frequency
+    df = f[1] - f[0]           # frequency step
+    bw = f2 - f1               # bandwidth
+    fc = (f1 + f2) / 2         # center frequency
+    Nf = len(f)                # number of frequency points
+    t_alias = 1 / df           # alias-free interval
+
     # Output time
     if t is None:
-        t = np.linspace(0, 1 / 2 / f2 * len(f), len(f))
-    dt = t[1] - t[0]
-    t1 = t.min()
-    t2 = t.max()
-    N = len(t)
+        t = np.linspace(0, t_alias, Nf)
+    t1, t2 = t.min(), t.max()  # start / stop time
+    dt = t[1] - t[0]           # time step
+    Nt = len(t)                # number of time points
+    Fs = 1 / dt                # sampling frequency
 
     # Step
-    W = np.exp(-1j * 2 * np.pi * dt * df)
+    W = np.exp(-2j * np.pi * bw / Nf / Fs)
 
     # Starting point
-    A = np.exp(1j * 2 * np.pi * f1 * dt)
+    A = np.exp(2j * np.pi * t1 / t_alias)
 
     # Time-domain transform
-    time_data = np.conj(czt(np.conj(2 * X), N, W, A)) * df
+    time_data = np.conj(czt(np.conj(X), Nt, W, A))
 
-    # Correct phase (in case f1 is not zero)
-    time_data = time_data * np.exp(1j * 2 * np.pi * f1 * np.arange(N) * dt)
+    # Phase shift
+    n = np.arange(Nt)
+    phase = np.exp(2j * np.pi * f1 * n * dt)
+    # phase = np.exp(2j * np.pi * (f1 + df / 2) * n * dt)
 
-    return t, time_data
+    return t, time_data * phase / Nf
 
 
 # HELPER FUNCTIONS -----------------------------------------------------------
@@ -418,7 +421,7 @@ def _fft(x):
     # Todo: simplify
     y = np.zeros(n, dtype=complex)
     for k in range(n // 2 - 1):
-        w = np.exp(-1j * 2 * np.pi * k / n)
+        w = np.exp(-2j * np.pi * k / n)
         y[k]            = y1[k] + w * y2[k]
         y[k + (n // 2)] = y1[k] - w * y2[k]
     return y
@@ -444,7 +447,7 @@ def _ifft(y):
     # TODO: simplify
     x = np.zeros(n, dtype=complex)
     for k in range(n // 2 -1):
-        w = np.exp(1j * 2 * np.pi * k / n)
+        w = np.exp(2j * np.pi * k / n)
         x[k]            = (x1[k] + w * x2[k]) / 2
         x[k + (n // 2)] = (x1[k] - w * x2[k]) / 2
     return x
