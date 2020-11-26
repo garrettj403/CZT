@@ -142,7 +142,7 @@ def czt_simple(x, M=None, W=None, A=1.0):
 
 # FREQ <--> TIME DOMAIN CONVERSION -------------------------------------------
 
-def time_to_freq_domain(t, x, f=None):
+def time2freq(t, x, f=None):
     """Convert signal from time domain to frequency domain.
 
     Args:
@@ -181,7 +181,7 @@ def time_to_freq_domain(t, x, f=None):
     return f, freq_data
 
 
-def freq_to_time_domain(f, X, t=None):
+def freq2time(f, X, t=None):
     """Convert signal from frequency domain to time domain.
 
     Args:
