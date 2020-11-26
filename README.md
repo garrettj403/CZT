@@ -4,17 +4,37 @@ Chirp z-Transform (CZT)
 Example
 -------
 
-Starting with a time-domain signal:
+Consider the following time-domain signal:
 
+<p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/signal.png" width="500">
+</p>
 
-We can convert the signal to the frequency-domain using a CZT:
+This is an exponentially decaying sine wave with some distortion from higher-order frequencies. We can convert the signal to the frequency-domain to investigate the frequency content using the Inverse Chirp z-Transform (ICZT):
 
+<p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/freq-domain.png" width="500">
+</p>
 
-We can also calculate the frequency response over an arbitrary frequency range:
+Note that the ICZT also allows us to calculate the frequency response over an arbitrary frequency range:
 
+<p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/zoom-czt.png" width="500">
+</p>
+
+In the frequency-domain, we can window the signal as we like:
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/windowed-freq-domain.png" width="500">
+</p>
+
+And finally use the CZT to trasform back to the time domain:
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/windowed-time-domain.png" width="500">
+</p>
+
+We were able to remove the higher-order frequencies that were distorting our original signal.
 
 References
 ----------
