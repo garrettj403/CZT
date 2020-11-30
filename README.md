@@ -22,19 +22,19 @@ Note that the ICZT also allows us to calculate the frequency response over an ar
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/zoom-czt.png" width="500">
 </p>
 
-In the frequency-domain, we can window the signal as we like:
+We can see that the signal has frequency components at 1 kHz, 2.5 kHz and 3.5 kHz. To remove the distortion and isolate the 1 kHz signal, we can apply a simple window in the frequency-domain:
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/windowed-freq-domain.png" width="500">
 </p>
 
-And finally use the CZT to trasform back to the time domain:
+Finally, we can use the CZT to trasform back to the time domain:
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/windowed-time-domain.png" width="500">
 </p>
 
-We were able to remove the higher-order frequencies that were distorting our original signal.
+As we can see, we were able to remove the higher-order frequencies that were distorting our 1 kHz signal.
 
 References
 ----------
