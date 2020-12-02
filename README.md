@@ -32,13 +32,15 @@ We can see that the signal has frequency components at 1 kHz, 2.5 kHz and 3.5 kH
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/windowed-freq-domain.png" width="500">
 </p>
 
-Finally, we can use the CZT to trasform back to the time domain:
+Finally, we can use the CZT to transform back to the time domain:
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/windowed-time-domain.png" width="500">
 </p>
 
 As we can see, we were able to remove the higher-order frequencies that were distorting our 1 kHz signal.
+
+You can find this example and others in the [``examples/`` directory.](https://github.com/garrettj403/CZT/blob/main/examples/)
 
 References
 ----------
