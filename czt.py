@@ -28,7 +28,8 @@ def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
             for simple matrix multiplication
         f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
-            'fast' for a method that may be faster for large arrays.
+            'fast' for a method that may be faster for large arrays. Warning:
+            'fast' doesn't seem to work very well. More testing required.
 
     Returns:
         np.ndarray: Chirp Z-transform
@@ -39,8 +40,11 @@ def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
     if M is None:
         M = N
     if W is None:
-        W = np.exp(2j * np.pi / M)
+        W = np.exp(-2j * np.pi / M)
         
+    if f_method == 'fast':
+        print("Warning: 'fast' doesn't seem to work very well. More testing needed.")
+
     k = np.arange(N)
     X = W ** (k ** 2 / 2) * A ** -k * x
     r = W ** (-(k ** 2) / 2)
@@ -129,7 +133,7 @@ def czt_simple(x, M=None, W=None, A=1.0):
     if M is None:
         M = N
     if W is None:
-        W = np.exp(2j * np.pi / M)
+        W = np.exp(-2j * np.pi / M)
     
     k = np.arange(M)
     X = np.zeros(M, dtype=complex)
