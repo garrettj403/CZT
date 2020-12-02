@@ -1,6 +1,10 @@
 Chirp z-Transform (CZT)
 =======================
 
+From [Wikipedia](https://en.wikipedia.org/wiki/Chirp_Z-transform):
+
+> The chirp Z-transform (CZT) is a generalization of the discrete Fourier transform (DFT). While the DFT samples the Z plane at uniformly-spaced points along the unit circle, the chirp Z-transform samples along spiral arcs in the Z-plane, corresponding to straight lines in the S plane. The DFT, real DFT, and zoom DFT can be calculated as special cases of the CZT.
+
 Example
 -------
 
