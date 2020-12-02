@@ -153,7 +153,42 @@ def test_iczt():
     np.testing.assert_almost_equal(x, x_iczt, decimal=12)
 
 
+def test_freq_to_time_convserions():
+    """Test frequency <-> time domain conversions."""
+    
+    # Time data
+    t1 = np.arange(0, 20e-3, 1e-4)
+    dt = t1[1] - t1[0]
+    Fs = 1 / dt
+    N = len(t1)
+
+    # Signal data
+    def model(t):
+        output = (1.0 * np.sin(2 * np.pi * 1e3 * t) + 
+                  0.3 * np.sin(2 * np.pi * 2e3 * t) + 
+                  0.1 * np.sin(2 * np.pi * 3e3 * t)) * np.exp(-1e3 * t)
+        return output
+    x1 = model(t1)
+
+    # Frequency domain
+    f, X = czt.time2freq(t1, x1)
+
+    # Back to time domain
+    t2, x2 = czt.freq2time(f, X)
+
+    # # Debug
+    # import matplotlib.pyplot as plt 
+    # plt.figure()
+    # plt.plot(t1, x1.real)
+    # plt.plot(t2, x2.real)
+    # plt.show()
+
+    # Compare
+    np.testing.assert_almost_equal(x1, x2, decimal=12)
+
+
 if __name__ == "__main__":
     test_compare_czt_methods()
     test_compare_czt_to_fft()
     test_iczt()
+    test_freq_to_time_convserions()
