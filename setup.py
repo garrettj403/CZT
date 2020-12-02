@@ -1,4 +1,4 @@
-"""Install CZT"""
+"""Install CZT package."""
 
 import io
 import os
@@ -37,7 +37,7 @@ class PyTest(TestCommand):
 setup(
     name = "czt",
     # version = czt.__version__,
-    version = "0.0.1-dev",
+    version = "0.0.1",
     author = "John Garrett",
     author_email = "garrettj403@gmail.com",
     description = "Chirp Z-transform implemented in Python",
@@ -68,7 +68,7 @@ setup(
         "Programming Language :: Python :: 3.7",
     ],
     project_urls={
-        # 'Changelog': 'https://github.com/garrettj403/CZT/blob/master/CHANGES.md',
+        'Changelog': 'https://github.com/garrettj403/CZT/blob/master/CHANGES.md',
         'Issue Tracker': 'https://github.com/garrettj403/CZT/issues',
     },
     # scripts=[
