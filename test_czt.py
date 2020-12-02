@@ -116,6 +116,44 @@ def test_compare_czt_to_fft():
     np.testing.assert_almost_equal(X_czt, X_fft, decimal=12)
 
 
+def test_iczt():
+    """Test inverse CZT."""
+    
+    # Time data
+    t = np.arange(0, 20e-3, 1e-4)
+    dt = t[1] - t[0]
+    Fs = 1 / dt
+    N = len(t)
+
+    # Signal data
+    def model(t):
+        output = (1.0 * np.sin(2 * np.pi * 1e3 * t) + 
+                  0.3 * np.sin(2 * np.pi * 2e3 * t) + 
+                  0.1 * np.sin(2 * np.pi * 3e3 * t)) * np.exp(-1e3 * t)
+        return output
+    x = model(t)
+
+    # CZT (defaults to FFT)
+    X_czt = czt.czt(x)
+
+    # ICZT
+    x_iczt = czt.iczt(X_czt)
+
+    # # Debug
+    # import matplotlib.pyplot as plt 
+    # plt.figure()
+    # plt.plot(x.real)
+    # plt.plot(x_iczt.real)
+    # plt.figure()
+    # plt.plot(x.imag)
+    # plt.plot(x_iczt.imag)
+    # plt.show()
+
+    # Compare
+    np.testing.assert_almost_equal(x, x_iczt, decimal=12)
+
+
 if __name__ == "__main__":
     test_compare_czt_methods()
     test_compare_czt_to_fft()
+    test_iczt()
