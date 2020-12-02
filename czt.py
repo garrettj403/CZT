@@ -13,7 +13,7 @@ from scipy.linalg import toeplitz
 
 
 def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
-    """Calculate Chirp Z-transform.
+    """Calculate Chirp Z-transform (CZT).
 
     Using an efficient algorithm. Solves in O(n log n) time.
 
@@ -65,50 +65,73 @@ def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
     return X
 
 
+def iczt(X, N=None, W=None, A=1.0, t_method='ce', f_method='std'):
+    """Calculate inverse Chirp Z-transform (ICZT).
+
+    Args:
+        X (np.ndarray): input array
+        N (int): length of output array
+        W (complex): complex ratio between points
+        A (complex): complex starting point
+        t_method (str): Toeplitz matrix multiplication method. 'ce' for 
+            circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
+            for simple matrix multiplication
+        f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
+            'fast' for a method that may be faster for large arrays. Warning:
+            'fast' doesn't seem to work very well. More testing required.
+
+    Returns:
+        np.ndarray: Inverse Chirp Z-transform
+
+    """
+
+    M = len(X)
+    if N is None:
+        N = M
+    if W is None:
+        W = np.exp(-2j * np.pi / M)
+
+    return np.conj(czt(np.conj(X), M=M, W=W, A=A, t_method=t_method, f_method=f_method)) / M
+
+
 # def iczt(X, N=None, W=None, A=1.0):
 
-#     M = len(X)
-#     if N is None:
-#         N = M
-#     if W is None:
-#         W = np.exp(2j * np.pi / M)
+    # assert M == N
+    # n = N
 
-#     assert M == N
-#     n = N
+    # # Multiply P^-1 and X
+    # x = np.empty(n, dtype=complex)
+    # for k in range(n):
+    #     x[k] = W ** (-(k ** 2) / 2) * X[k]
 
-#     # Multiply P^-1 and X
-#     x = np.empty(n, dtype=complex)
-#     for k in range(n):
-#         x[k] = W ** (-(k ** 2) / 2) * X[k]
+    # # Precompute the necessary polynomial products
+    # p = np.empty(n, dtype=complex)
+    # p[0] = 1
+    # for k in range(1, n):
+    #     p[k] = p[k - 1] * (W ** k - 1)
 
-#     # Precompute the necessary polynomial products
-#     p = np.empty(n, dtype=complex)
-#     p[0] = 1
-#     for k in range(1, n):
-#         p[k] = p[k - 1] * (W ** k - 1)
-
-#     # Compute the generating vector u
-#     u = np.empty(n, dtype=complex)
-#     for k in range(n):
-#         u[k] = (-1)**k * W ** ((2*k**2 - (2*n-1)*k + n*(n-1)) / 2) / (p[n-k-1]*p[k])
+    # # Compute the generating vector u
+    # u = np.empty(n, dtype=complex)
+    # for k in range(n):
+    #     u[k] = (-1)**k * W ** ((2*k**2 - (2*n-1)*k + n*(n-1)) / 2) / (p[n-k-1]*p[k])
     
-#     z = np.zeros(n, dtype=complex)
-#     uhat = np.r_[0, u[1:][::-1]]
-#     util = np.r_[u[0], np.zeros(n - 1, dtype=complex)]
-#     x1 = _toeplitz_mult_ce(uhat, z, x)
-#     x1 = _toeplitz_mult_ce(z, uhat, x1)
-#     x2 = _toeplitz_mult_ce(u, util, x)
-#     x2 = _toeplitz_mult_ce(util, u, x2)
+    # z = np.zeros(n, dtype=complex)
+    # uhat = np.r_[0, u[1:][::-1]]
+    # util = np.r_[u[0], np.zeros(n - 1, dtype=complex)]
+    # x1 = _toeplitz_mult_ce(uhat, z, x)
+    # x1 = _toeplitz_mult_ce(z, uhat, x1)
+    # x2 = _toeplitz_mult_ce(u, util, x)
+    # x2 = _toeplitz_mult_ce(util, u, x2)
 
-#     # Subtract and divide by u0
-#     for k in range(n):
-#         x[k] = (x2[k] - x1[k]) / u[0]
+    # # Subtract and divide by u0
+    # for k in range(n):
+    #     x[k] = (x2[k] - x1[k]) / u[0]
 
-#     # multiply by A^-1 Q^-1
-#     for k in range(n):
-#         x[k] = A ** k * W * (-(k ** 2) / 2) * x[k]
+    # # multiply by A^-1 Q^-1
+    # for k in range(n):
+    #     x[k] = A ** k * W * (-(k ** 2) / 2) * x[k]
 
-#     return x
+    # return x
 
 
 def czt_simple(x, M=None, W=None, A=1.0):
@@ -221,14 +244,14 @@ def freq2time(f, X, t=None):
     A = np.exp(2j * np.pi * t1 / t_alias)
 
     # Time-domain transform
-    time_data = np.conj(czt(np.conj(X), Nt, W, A))
+    time_data = iczt(X, Nt, W, A)
 
     # Phase shift
     n = np.arange(Nt)
     phase = np.exp(2j * np.pi * f1 * n * dt)
     # phase = np.exp(2j * np.pi * (f1 + df / 2) * n * dt)
 
-    return t, time_data * phase / Nf
+    return t, time_data * phase
 
 
 # HELPER FUNCTIONS -----------------------------------------------------------
