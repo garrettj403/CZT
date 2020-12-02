@@ -190,7 +190,7 @@ def time2freq(t, x, f=None):
 
     # Output frequency
     if f is None:
-        f = np.linspace(0, Fs / 2, Nt)
+        f = np.linspace(-Fs / 2, Fs / 2, Nt)
     f1, f2 = f.min(), f.max()  # start / stop
     df = f[1] - f[0]           # frequency step
     bw = f2 - f1               # bandwidth
