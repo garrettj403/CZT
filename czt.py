@@ -91,7 +91,7 @@ def iczt(X, N=None, W=None, A=1.0, t_method='ce', f_method='std'):
     if W is None:
         W = np.exp(-2j * np.pi / M)
 
-    return np.conj(czt(np.conj(X), M=M, W=W, A=A, t_method=t_method, f_method=f_method)) / M
+    return np.conj(czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)) / M
 
 
 # def iczt(X, N=None, W=None, A=1.0):
@@ -167,10 +167,67 @@ def czt_simple(x, M=None, W=None, A=1.0):
     return X
 
 
-# FREQ <--> TIME DOMAIN CONVERSION -------------------------------------------
+# OTHER TRANSFORMS -----------------------------------------------------------
+
+def dft(t, x, f=None):
+    """Convert signal from time-domain to frequency-domain using a Discrete 
+    Fourier Transform (DFT).
+
+    Args:
+        t (np.ndarray): time
+        x (np.ndarray): time-domain signal
+        f (np.ndarray): frequency for output signal
+
+    Returns:
+        np.ndarray: frequency-domain signal
+
+    """
+
+    if f is None:
+        dt = t[1] - t[0]  # time step
+        Fs = 1 / dt       # sample frequency
+        f = np.linspace(-Fs / 2, Fs / 2, len(t))
+
+    X = np.zeros(len(f), dtype=complex)
+    for k in range(len(X)):
+        X[k] = np.sum(x * np.exp(-2j * np.pi * f[k] * t))
+
+    return f, X
+
+
+def idft(f, X, t=None):
+    """Convert signal from time-domain to frequency-domain using an Inverse 
+    Discrete Fourier Transform (IDFT).
+
+    Args:
+        f (np.ndarray): frequency
+        X (np.ndarray): frequency-domain signal
+        t (np.ndarray): time for output signal
+
+    Returns:
+        np.ndarray: time-domain signal
+
+    """
+
+    if t is None:
+        bw = f.max() - f.min()
+        t = np.linspace(0, bw / 2, len(f))
+
+    N = len(t)
+    x = np.zeros(N, dtype=complex)
+    for n in range(len(x)):
+        x[n] = np.sum(X * np.exp(2j * np.pi * f * t[n]))
+        # for k in range(len(X)):
+        #     x[n] += X[k] * np.exp(2j * np.pi * f[k] * t[n])
+    x /= N
+
+    return t, x
+
+
+# FREQ <--> TIME-DOMAIN CONVERSION -------------------------------------------
 
 def time2freq(t, x, f=None):
-    """Convert signal from time domain to frequency domain.
+    """Convert signal from time-domain to frequency-domain.
 
     Args:
         t (np.ndarray): time
@@ -197,7 +254,7 @@ def time2freq(t, x, f=None):
     Nf = len(f)                # number of frequency points
 
     # Step
-    W = np.exp(-2j * np.pi * bw / Nf / Fs)
+    W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
 
     # Starting point
     A = np.exp(2j * np.pi * f1 / Fs)
@@ -209,7 +266,7 @@ def time2freq(t, x, f=None):
 
 
 def freq2time(f, X, t=None):
-    """Convert signal from frequency domain to time domain.
+    """Convert signal from frequency-domain to time-domain.
 
     Args:
         f (np.ndarray): frequency
@@ -238,16 +295,16 @@ def freq2time(f, X, t=None):
     Fs = 1 / dt                # sampling frequency
 
     # Step
-    W = np.exp(-2j * np.pi * bw / Nf / Fs)
+    W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
 
     # Starting point
     A = np.exp(2j * np.pi * t1 / t_alias)
 
     # Time-domain transform
-    time_data = iczt(X, Nt, W, A)
+    time_data = iczt(X, N=Nt, W=W, A=A)
 
     # Phase shift
-    n = np.arange(Nt)
+    n = np.arange(len(time_data))
     phase = np.exp(2j * np.pi * f1 * n * dt)
     # phase = np.exp(2j * np.pi * (f1 + df / 2) * n * dt)
 
