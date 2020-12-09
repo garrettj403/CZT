@@ -37,7 +37,7 @@ def test_compare_czt_methods(debug=False):
     X_czt6 = czt.czt(x, t_method='pd', f_method='fast')
     X_czt7 = czt.czt(x, t_method='mm', f_method='fast')
 
-    # Debug
+    # Plot for debugging purposes
     if debug:
         import matplotlib.pyplot as plt 
         plt.figure()
@@ -103,7 +103,7 @@ def test_compare_czt_fft_dft(debug=False):
     # DFT
     _, X_dft = czt.dft(t, x)
 
-    # Debug
+    # Plot for debugging purposes
     if debug:
         import matplotlib.pyplot as plt 
         plt.figure(figsize=(10, 8))
@@ -154,7 +154,7 @@ def test_iczt(debug=False):
     # ICZT
     x_iczt = czt.iczt(X_czt)
 
-    # Debug
+    # Plot for debugging purposes
     if debug:
         import matplotlib.pyplot as plt 
         plt.figure()
@@ -192,7 +192,7 @@ def test_freq_to_time_convserions(debug=False):
     # Back to time domain
     t2, x2 = czt.freq2time(f, X)
 
-    # Debug
+    # Plot for debugging purposes
     if debug:
         import matplotlib.pyplot as plt 
         plt.figure()
@@ -240,7 +240,7 @@ def test_compare_czt_dft(debug=False):
     # Frequency domain using CZT
     _, X_dft = czt.dft(t, x, f)
 
-    # Debug
+    # Plot for debugging purposes
     if debug:
         import matplotlib.pyplot as plt 
         plt.figure()
@@ -290,7 +290,7 @@ def test_compare_iczt_idft(debug=False):
     # Get time-domain using IDFT
     _, x_idft = czt.idft(f, X, t)
 
-    # Debug
+    # Plot for debugging purposes
     if debug:
         import matplotlib.pyplot as plt 
         plt.figure()
@@ -343,7 +343,7 @@ def test_frequency_zoom(debug=False):
     # Zoom DFT
     f_dft2, X_dft2 = czt.dft(t, x, f_dft1)
 
-    # Debug
+    # Plot for debugging purposes
     if debug:
         import matplotlib.pyplot as plt 
         plt.figure(figsize=(10, 8))
@@ -364,7 +364,73 @@ def test_frequency_zoom(debug=False):
     np.testing.assert_almost_equal(X_czt1, X_dft2, decimal=12)
 
 
+def test_compare_to_analytic(debug=False):
+    """Compare CZT to analytic value."""
+
+    # Create time-domain data
+    t = np.arange(0, 50e-3 + 1e-10, 1e-5)
+    dt = t[1] - t[0]
+    Fs = 1 / dt
+    N = len(t)
+
+    # Signal
+    def model(t):
+        output = (1.0 * np.sin(2 * np.pi * 1e3 * t) + 
+                  0.3 * np.sin(2 * np.pi * 2e3 * t) + 
+                  0.1 * np.sin(2 * np.pi * 3e3 * t)) * np.exp(-1e3 * t)
+        return output
+    x = model(t)
+
+    # CZT
+    f = np.arange(-20, 20+1e-10, 0.01) * 1e3
+    _, X_czt = czt.time2freq(t, x, f)
+
+    # Build frequency domain signal
+    X1 = np.zeros_like(f, dtype=complex)
+    idx = np.abs(f - 1e3).argmin()
+    X1[idx] = 1 / 2j
+    idx = np.abs(f + 1e3).argmin()
+    X1[idx] = -1 / 2j
+    idx = np.abs(f - 2e3).argmin()
+    X1[idx] = 0.3 / 2j
+    idx = np.abs(f + 2e3).argmin()
+    X1[idx] = -0.3 / 2j
+    idx = np.abs(f - 3e3).argmin()
+    X1[idx] = 0.1 / 2j
+    idx = np.abs(f + 3e3).argmin()
+    X1[idx] = -0.1 / 2j
+    X2 = 1 / (1e3 + 2j * np.pi * f)
+    X = np.convolve(X1, X2)
+    X = X[len(X)//4:-len(X)//4+1]
+    X *= 2 * (f[1] - f[0]) * len(t)
+
+    # Truncate
+    mask = (0 < f) & (f < 5e3)
+    f, X, X_czt = f[mask], X[mask], X_czt[mask]
+
+    # Plot for debugging purposes
+    if debug:
+        import matplotlib.pyplot as plt
+        plt.figure()
+        plt.title("Absolute")
+        plt.plot(f/1e3, np.abs(X_czt))
+        plt.plot(f/1e3, np.abs(X), 'r--')
+        plt.figure()
+        plt.title("Real")
+        plt.plot(f/1e3, X_czt.real)
+        plt.plot(f/1e3, X.real, 'r--')
+        plt.figure()
+        plt.title("Imaginary")
+        plt.plot(f/1e3, X_czt.imag)
+        plt.plot(f/1e3, X.imag, 'r--')
+        plt.show()
+
+    # Compare
+    np.testing.assert_allclose(X, X_czt, atol=0.02)
+
+
 if __name__ == "__main__":
+
     test_compare_czt_methods()
     test_compare_czt_fft_dft()
     test_iczt()
@@ -372,3 +438,4 @@ if __name__ == "__main__":
     test_compare_czt_dft()
     test_compare_iczt_idft()
     test_frequency_zoom()
+    test_compare_to_analytic(debug=True)
