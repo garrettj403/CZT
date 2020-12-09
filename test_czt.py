@@ -29,7 +29,7 @@ def test_compare_different_czt_methods(debug=False):
     x = model(t)
 
     # Calculate CZT using different methods
-    X_czt1 = czt.czt_simple(x)
+    X_czt1 = czt.czt(x, simple=True)
     X_czt2 = czt.czt(x, t_method='ce')
     X_czt3 = czt.czt(x, t_method='pd')
     X_czt4 = czt.czt(x, t_method='mm')

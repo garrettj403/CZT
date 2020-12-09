@@ -10,9 +10,12 @@ Main reference:
 
 import numpy as np
 from scipy.linalg import toeplitz
+from scipy.signal import kaiser
 
 
-def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
+# CZT TRANSFORM --------------------------------------------------------------
+
+def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
     """Calculate Chirp Z-transform (CZT).
 
     Using an efficient algorithm. Solves in O(n log n) time.
@@ -24,6 +27,7 @@ def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
         M (int): length of output array
         W (complex): complex ratio between points
         A (complex): complex starting point
+        simple (bool): use simple algorithm?
         t_method (str): Toeplitz matrix multiplication method. 'ce' for 
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
             for simple matrix multiplication
@@ -42,6 +46,14 @@ def czt(x, M=None, W=None, A=1.0, t_method='ce', f_method='std'):
     if W is None:
         W = np.exp(-2j * np.pi / M)
         
+    if simple:
+        k = np.arange(M)
+        X = np.zeros(M, dtype=complex)
+        z = A * W ** -k
+        for n in range(N):
+            X += x[n] * z ** -n
+        return X
+
     if f_method == 'fast':
         print("Warning: 'fast' doesn't seem to work very well. More testing needed.")
 
@@ -92,79 +104,6 @@ def iczt(X, N=None, W=None, A=1.0, t_method='ce', f_method='std'):
         W = np.exp(-2j * np.pi / M)
 
     return np.conj(czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)) / M
-
-
-# def iczt(X, N=None, W=None, A=1.0):
-
-    # assert M == N
-    # n = N
-
-    # # Multiply P^-1 and X
-    # x = np.empty(n, dtype=complex)
-    # for k in range(n):
-    #     x[k] = W ** (-(k ** 2) / 2) * X[k]
-
-    # # Precompute the necessary polynomial products
-    # p = np.empty(n, dtype=complex)
-    # p[0] = 1
-    # for k in range(1, n):
-    #     p[k] = p[k - 1] * (W ** k - 1)
-
-    # # Compute the generating vector u
-    # u = np.empty(n, dtype=complex)
-    # for k in range(n):
-    #     u[k] = (-1)**k * W ** ((2*k**2 - (2*n-1)*k + n*(n-1)) / 2) / (p[n-k-1]*p[k])
-    
-    # z = np.zeros(n, dtype=complex)
-    # uhat = np.r_[0, u[1:][::-1]]
-    # util = np.r_[u[0], np.zeros(n - 1, dtype=complex)]
-    # x1 = _toeplitz_mult_ce(uhat, z, x)
-    # x1 = _toeplitz_mult_ce(z, uhat, x1)
-    # x2 = _toeplitz_mult_ce(u, util, x)
-    # x2 = _toeplitz_mult_ce(util, u, x2)
-
-    # # Subtract and divide by u0
-    # for k in range(n):
-    #     x[k] = (x2[k] - x1[k]) / u[0]
-
-    # # multiply by A^-1 Q^-1
-    # for k in range(n):
-    #     x[k] = A ** k * W * (-(k ** 2) / 2) * x[k]
-
-    # return x
-
-
-def czt_simple(x, M=None, W=None, A=1.0):
-    """Simple Chirp Z-transform algorithm.
-
-    Direct implementation. Brute force.
-
-    Used to compare against czt in tests.
-
-    Args:
-        x (np.ndarray): input array
-        M (int): length of output array
-        W (complex): complex ratio between points
-        A (complex): complex starting point
-
-    Returns:
-        np.ndarray: Chirp Z-transform
-
-    """
-    
-    N = len(x)
-    if M is None:
-        M = N
-    if W is None:
-        W = np.exp(-2j * np.pi / M)
-    
-    k = np.arange(M)
-    X = np.zeros(M, dtype=complex)
-    z = A * W ** -k
-    for n in range(N):
-        X += x[n] * z ** -n
-    
-    return X
 
 
 # OTHER TRANSFORMS -----------------------------------------------------------
