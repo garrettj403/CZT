@@ -11,7 +11,7 @@ import numpy as np
 import czt
 
 
-def test_compare_czt_methods(debug=False):
+def test_compare_different_czt_methods(debug=False):
     """Compare different CZT calculation methods."""
     
     # Create time-domain data
@@ -78,7 +78,7 @@ def test_compare_czt_methods(debug=False):
 
 
 def test_compare_czt_fft_dft(debug=False):
-    """Compare CZT to FFT and DFT."""
+    """Compare CZT, FFT and DFT."""
     
     # Create time-domain data
     t = np.arange(0, 20e-3 + 1e-10, 1e-4)
@@ -131,8 +131,8 @@ def test_compare_czt_fft_dft(debug=False):
     np.testing.assert_allclose(X_czt, X_dft, atol=0.2)
 
 
-def test_iczt(debug=False):
-    """Test inverse CZT."""
+def test_czt_to_iczt(debug=False):
+    """Test CZT -> ICZT."""
     
     # Create time-domain data
     t = np.arange(0, 20e-3, 1e-4)
@@ -169,8 +169,8 @@ def test_iczt(debug=False):
     np.testing.assert_almost_equal(x, x_iczt, decimal=12)
 
 
-def test_freq_to_time_convserions(debug=False):
-    """Test frequency <-> time domain conversions."""
+def test_time_to_freq_to_time(debug=False):
+    """Test time -> frequency -> time domain conversions."""
     
     # Create time-domain data
     t1 = np.arange(0, 20e-3, 1e-4)
@@ -216,54 +216,6 @@ def test_freq_to_time_convserions(debug=False):
     np.testing.assert_allclose(x1, x2, atol=0.01)
 
 
-def test_compare_czt_dft(debug=False):
-    """Compare CZT to DFT."""
-    
-    # Create time-domain data
-    t = np.arange(0, 20e-3, 1e-4)
-    dt = t[1] - t[0]
-    Fs = 1 / dt
-    N = len(t)
-
-    # Signal
-    def model(t):
-        output = (1.0 * np.sin(2 * np.pi * 1e3 * t) + 
-                  0.3 * np.sin(2 * np.pi * 2e3 * t) + 
-                  0.1 * np.sin(2 * np.pi * 3e3 * t)) * np.exp(-1e3 * t)
-        return output
-    x = model(t)
-
-    # Frequency domain using CZT
-    f = np.linspace(0, 5e3, len(t))
-    _, X_czt = czt.time2freq(t, x, f)
-
-    # Frequency domain using CZT
-    _, X_dft = czt.dft(t, x, f)
-
-    # Plot for debugging purposes
-    if debug:
-        import matplotlib.pyplot as plt 
-        plt.figure()
-        plt.title("Absolute")
-        plt.plot(f, np.abs(X_czt), 'k', label="CZT")
-        plt.plot(f, np.abs(X_dft), 'r--', label="DFT")
-        plt.legend()
-        plt.figure()
-        plt.title("Real")
-        plt.plot(f, X_czt.real, 'k', label="CZT")
-        plt.plot(f, X_dft.real, 'r--', label="DFT")
-        plt.legend()
-        plt.figure()
-        plt.title("Imaginary")
-        plt.plot(f, X_czt.imag, 'k', label="CZT")
-        plt.plot(f, X_dft.imag, 'r--', label="DFT")
-        plt.legend()
-        plt.show()
-
-    # Compare
-    np.testing.assert_allclose(X_czt, X_dft, atol=0.2)
-
-
 def test_compare_iczt_idft(debug=False):
     """Compare ICZT to IDFT."""
     
@@ -306,7 +258,7 @@ def test_compare_iczt_idft(debug=False):
         plt.show()
 
     # Compare
-    # np.testing.assert_allclose(X_czt, X_dft, atol=0.2)
+    np.testing.assert_almost_equal(x_iczt, x_idft, decimal=12)
 
 
 def test_frequency_zoom(debug=False):
@@ -364,8 +316,8 @@ def test_frequency_zoom(debug=False):
     np.testing.assert_almost_equal(X_czt1, X_dft2, decimal=12)
 
 
-def test_compare_to_analytic(debug=False):
-    """Compare CZT to analytic value."""
+def test_compare_czt_to_analytic_expression(debug=False):
+    """Compare CZT to analytic expression."""
 
     # Create time-domain data
     t = np.arange(0, 50e-3 + 1e-10, 1e-5)
@@ -431,11 +383,10 @@ def test_compare_to_analytic(debug=False):
 
 if __name__ == "__main__":
 
-    test_compare_czt_methods()
+    test_compare_different_czt_methods()
     test_compare_czt_fft_dft()
-    test_iczt()
-    test_freq_to_time_convserions()
-    test_compare_czt_dft()
+    test_czt_to_iczt()
+    test_time_to_freq_to_time()
     test_compare_iczt_idft()
     test_frequency_zoom()
-    test_compare_to_analytic(debug=True)
+    test_compare_czt_to_analytic_expression()
