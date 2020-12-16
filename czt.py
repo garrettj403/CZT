@@ -165,32 +165,41 @@ def idft(f, X, t=None):
 
 # FREQ <--> TIME-DOMAIN CONVERSION -------------------------------------------
 
-def time2freq(t, x, f=None):
+def time2freq(t, x, f=None, f_orig=None):
     """Convert signal from time-domain to frequency-domain.
 
     Args:
         t (np.ndarray): time
         x (np.ndarray): time-domain signal
         f (np.ndarray): frequency for output signal
+        f_orig (np.ndarray): frequency sweep of the original signal, necessary
+            for normalization if the new frequency sweep is different from the
+            original
 
     Returns:
         np.ndarray: frequency-domain signal
 
     """
 
-    # Input time
+    # Input time array
     t1, t2 = t.min(), t.max()  # start / stop time
     dt = t[1] - t[0]           # time step
     Nt = len(t)                # number of time points
     Fs = 1 / dt                # sampling frequency
 
-    # Output frequency
+    # Output frequency array
     if f is None:
         f = np.linspace(-Fs / 2, Fs / 2, Nt)
     f1, f2 = f.min(), f.max()  # start / stop
     df = f[1] - f[0]           # frequency step
     bw = f2 - f1               # bandwidth
     Nf = len(f)                # number of frequency points
+
+    # Correction factor (normalization)
+    if f_orig is not None:
+        k = 1 / (dt * (f_orig.max() - f_orig.min()))
+    else:
+        k = 1 / (dt * (f.max() - f.min()))
 
     # Step
     W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
@@ -199,12 +208,12 @@ def time2freq(t, x, f=None):
     A = np.exp(2j * np.pi * f1 / Fs)
 
     # Frequency-domain transform
-    freq_data = czt(x, Nf, W, A) #* dt
+    freq_data = czt(x, Nf, W, A)
 
-    return f, freq_data
+    return f, freq_data / k
 
 
-def freq2time(f, X, t=None):
+def freq2time(f, X, t=None, t_orig=None):
     """Convert signal from frequency-domain to time-domain.
 
     Args:
@@ -233,6 +242,12 @@ def freq2time(f, X, t=None):
     Nt = len(t)                # number of time points
     Fs = 1 / dt                # sampling frequency
 
+    # Correction factor (normalization)
+    if t_orig is not None:
+        k = (t.max() - t.min()) / df / (t_orig.max() - t_orig.min()) **2
+    else:
+        k = 1
+
     # Step
     W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
 
@@ -247,7 +262,7 @@ def freq2time(f, X, t=None):
     phase = np.exp(2j * np.pi * f1 * n * dt)
     # phase = np.exp(2j * np.pi * (f1 + df / 2) * n * dt)
 
-    return t, time_data * phase
+    return t, time_data * phase / k
 
 
 # WINDOW ---------------------------------------------------------------------
