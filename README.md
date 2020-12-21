@@ -1,4 +1,4 @@
-Chirp z-Transform (CZT)
+Chirp Z-Transform (CZT)
 =======================
 
 [![PyPI version](https://badge.fury.io/py/czt.svg)](https://badge.fury.io/py/czt)
@@ -16,7 +16,7 @@ Consider the following time-domain signal:
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/signal.png" width="500">
 </p>
 
-This is an exponentially decaying sine wave with some distortion from higher-order frequencies. We can convert the signal to the frequency-domain to investigate the frequency content using the Inverse Chirp z-Transform (ICZT):
+This is an exponentially decaying sine wave with some distortion from higher-order frequencies. We can convert the signal to the frequency-domain to investigate the frequency content using the Inverse Chirp Z-Transform (ICZT):
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/freq-domain.png" width="500">
