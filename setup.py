@@ -48,7 +48,8 @@ setup(
         "signal-processing",
         "dsp",
     ],
-    packages=find_packages(),
+    # packages=find_packages(),
+    py_modules=['czt'],
     install_requires=[
         'numpy',
         'scipy',
