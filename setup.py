@@ -35,26 +35,26 @@ class PyTest(TestCommand):
         sys.exit(errcode)
 
 setup(
-    name = "czt",
-    # version = czt.__version__,
-    version = "0.0.2",
-    author = "John Garrett",
-    author_email = "garrettj403@gmail.com",
-    description = "Chirp Z-transform implemented in Python",
-    license = "MIT",
-    url = "https://github.com/garrettj403/CZT/",
-    keywords = [
+    name="czt",
+    # version=czt.__version__,
+    version="0.0.2",
+    author="John Garrett",
+    author_email="garrettj403@gmail.com",
+    description="Chirp Z-transform implemented in Python",
+    license="MIT",
+    url="https://github.com/garrettj403/CZT/",
+    keywords=[
         "z-transform",
         "signal-processing",
-        "dsp",
-    ],
+        "dsp",],
     # packages=find_packages(),
     py_modules=['czt'],
     install_requires=[
         'numpy',
-        'scipy',
-    ],
-    extras_require={'testing': ['pytest'],},
+        'scipy',],
+    extras_require={
+        'testing': ['pytest'],
+        'examples': ['matplotlib', 'scikit-rf',],},
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
     long_description=long_description,
@@ -66,12 +66,9 @@ setup(
         "Natural Language :: English",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-    ],
+        "Programming Language :: Python :: 3.7",],
     project_urls={
         'Changelog': 'https://github.com/garrettj403/CZT/blob/master/CHANGES.md',
-        'Issue Tracker': 'https://github.com/garrettj403/CZT/issues',
-    },
-    # scripts=[
-    # ],
+        'Issue Tracker': 'https://github.com/garrettj403/CZT/issues',},
+    # scripts=[],
 )
