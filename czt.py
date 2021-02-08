@@ -202,6 +202,7 @@ def time2freq(t, x, f=None, f_orig=None):
         k = 1 / (dt * (f.max() - f.min()))
 
     # Step
+    # W = np.exp(-2j * np.pi * bw / Nf / Fs)
     W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
 
     # Starting point
@@ -249,6 +250,7 @@ def freq2time(f, X, t=None, t_orig=None):
         k = 1
 
     # Step
+    # W = np.exp(-2j * np.pi * bw / Nf / Fs)
     W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
 
     # Starting point
