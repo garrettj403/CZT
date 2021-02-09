@@ -9,7 +9,7 @@ Main reference:
 """
 
 import numpy as np
-from scipy.linalg import toeplitz
+from scipy.linalg import toeplitz, matmul_toeplitz
 from scipy.signal import kaiser
 
 
@@ -30,10 +30,12 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
         simple (bool): use simple algorithm?
         t_method (str): Toeplitz matrix multiplication method. 'ce' for 
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
-            for simple matrix multiplication
+            for simple matrix multiplication, 'scipy' for matmul_toeplitz
+            from scipy.linalg.
         f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
             'fast' for a method that may be faster for large arrays. Warning:
             'fast' doesn't seem to work very well. More testing required.
+            Ignored for t_method 'mm' and 'scipy'.
 
     Returns:
         np.ndarray: Chirp Z-transform
@@ -68,6 +70,8 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
         X = _toeplitz_mult_pd(r, c, X, f_method)
     elif t_method.lower() == 'mm':
         X = np.matmul(toeplitz(r, c), X)
+    elif t_method.lower() == 'scipy':
+        X = matmul_toeplitz((c,r), X)
     else:
         print("t_method not recognized.")
         raise ValueError
@@ -87,10 +91,12 @@ def iczt(X, N=None, W=None, A=1.0, t_method='ce', f_method='std'):
         A (complex): complex starting point
         t_method (str): Toeplitz matrix multiplication method. 'ce' for 
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
-            for simple matrix multiplication
+            for simple matrix multiplication, 'scipy' for matmul_toeplitz
+            from scipy.linalg.
         f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
             'fast' for a method that may be faster for large arrays. Warning:
             'fast' doesn't seem to work very well. More testing required.
+            Ignored for t_method 'mm' and 'scipy'.
 
     Returns:
         np.ndarray: Inverse Chirp Z-transform
