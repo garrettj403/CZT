@@ -51,7 +51,7 @@ setup(
     py_modules=['czt'],
     install_requires=[
         'numpy',
-        'scipy',],
+        'scipy>=1.6.0',],
     extras_require={
         'testing': ['pytest'],
         'examples': ['matplotlib', 'scikit-rf',],},
