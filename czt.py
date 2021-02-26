@@ -20,7 +20,7 @@ from scipy.signal import kaiser
 
 # CZT TRANSFORM --------------------------------------------------------------
 
-def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
+def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='std'):
     """Calculate the Chirp Z-transform (CZT).
 
     Uses an efficient algorithm. Solves in O(n log n) time.
