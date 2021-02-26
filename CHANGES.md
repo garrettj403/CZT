@@ -1,3 +1,18 @@
+v0.0.3 (Feb 26, 2021)
+=====================
+
+- CZT:
+	- Added new ``t_method`` to ``czt``. This method uses the new ``matmul_toeplitz`` function from Scipy. Requires ``scipy>=1.6.0``.
+	- Fixed argument order in ``scipy.linalg.toeplitz``.
+	- Use ``np.complex128`` for A and W. Fixes a potential error if A or W is passed as an integer.
+- Setup:
+	- Add dependencies for examples.
+	- Add ``requriements.txt``.
+- Testing:
+	- Added new ``t_method`` to testing.
+- Misc:
+	- More comments.
+
 v0.0.2 (Dec 21, 2020)
 =====================
 
