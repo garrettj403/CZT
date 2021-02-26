@@ -47,6 +47,8 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
         M = N
     if W is None:
         W = np.exp(-2j * np.pi / M)
+    A = complex(A)
+    W = complex(W)
         
     if simple:
         k = np.arange(M)
@@ -69,7 +71,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
     elif t_method.lower() == 'pd':
         X = _toeplitz_mult_pd(r, c, X, f_method)
     elif t_method.lower() == 'mm':
-        X = np.matmul(toeplitz(r, c), X)
+        X = np.matmul(toeplitz(c, r), X)
     elif t_method.lower() == 'scipy':
         X = matmul_toeplitz((c,r), X)
     else:
