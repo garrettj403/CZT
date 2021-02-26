@@ -92,7 +92,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='std'
     return X
 
 
-def iczt(X, N=None, W=None, A=1.0, t_method='ce', f_method='std'):
+def iczt(X, N=None, W=None, A=1.0, t_method='scipy', f_method='std'):
     """Calculate inverse Chirp Z-transform (ICZT).
 
     Args:
