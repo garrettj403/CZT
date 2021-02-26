@@ -53,9 +53,9 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
         M = N
     if W is None:
         W = np.exp(-2j * np.pi / M)
-    A = complex(A)
-    W = complex(W)
-    
+    A = np.complex128(A)
+    W = np.complex128(W)
+
     # Simple algorithm (very slow)
     if simple:
         k = np.arange(M)
@@ -69,6 +69,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
         print("Warning: f_method='fast' doesn't seem to work very well...")
         print("More testing required.")
 
+    # Efficient algorithm
     k = np.arange(N)
     X = W ** (k ** 2 / 2) * A ** -k * x
     r = W ** (-(k ** 2) / 2)
