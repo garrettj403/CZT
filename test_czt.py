@@ -36,9 +36,9 @@ def test_compare_different_czt_methods(debug=False):
     X_czt2 = czt.czt(x, t_method='ce')
     X_czt3 = czt.czt(x, t_method='pd')
     X_czt4 = czt.czt(x, t_method='mm')
-    X_czt5 = czt.czt(x, t_method='ce', f_method='fast')
-    X_czt6 = czt.czt(x, t_method='pd', f_method='fast')
-    X_czt7 = czt.czt(x, t_method='mm', f_method='fast')
+    X_czt5 = czt.czt(x, t_method='scipy')
+    X_czt6 = czt.czt(x, t_method='ce', f_method='fast')
+    X_czt7 = czt.czt(x, t_method='pd', f_method='fast')
 
     # Plot for debugging purposes
     if debug:
@@ -48,9 +48,9 @@ def test_compare_different_czt_methods(debug=False):
         plt.plot(np.abs(X_czt2), label="ce")
         plt.plot(np.abs(X_czt3), label="pd")
         plt.plot(np.abs(X_czt4), label="mm")
-        plt.plot(np.abs(X_czt5), label="ce / fast")
-        plt.plot(np.abs(X_czt6), label="pd / fast")
-        plt.plot(np.abs(X_czt7), label="mm / fast")
+        plt.plot(np.abs(X_czt5), label="scipy")
+        plt.plot(np.abs(X_czt6), label="ce / fast")
+        plt.plot(np.abs(X_czt7), label="pd / fast")
         plt.legend()
         plt.figure()
         plt.title("Real component")
@@ -58,9 +58,9 @@ def test_compare_different_czt_methods(debug=False):
         plt.plot(X_czt2.real, label="ce")
         plt.plot(X_czt3.real, label="pd")
         plt.plot(X_czt4.real, label="mm")
-        plt.plot(X_czt5.real, label="ce / fast")
-        plt.plot(X_czt6.real, label="pd / fast")
-        plt.plot(X_czt7.real, label="mm / fast")
+        plt.plot(X_czt5.real, label="scipy")
+        plt.plot(X_czt6.real, label="ce / fast")
+        plt.plot(X_czt7.real, label="pd / fast")
         plt.legend()
         plt.figure()
         plt.title("Imaginary component")
@@ -68,9 +68,9 @@ def test_compare_different_czt_methods(debug=False):
         plt.plot(X_czt2.imag, label="ce")
         plt.plot(X_czt3.imag, label="pd")
         plt.plot(X_czt4.imag, label="mm")
-        plt.plot(X_czt5.imag, label="ce / fast")
-        plt.plot(X_czt6.imag, label="pd / fast")
-        plt.plot(X_czt7.imag, label="mm / fast")
+        plt.plot(X_czt5.imag, label="scipy")
+        plt.plot(X_czt6.imag, label="ce / fast")
+        plt.plot(X_czt7.imag, label="pd / fast")
         plt.legend()
         plt.show()
 
@@ -78,9 +78,9 @@ def test_compare_different_czt_methods(debug=False):
     np.testing.assert_almost_equal(X_czt1, X_czt2, decimal=12)
     np.testing.assert_almost_equal(X_czt1, X_czt3, decimal=12)
     np.testing.assert_almost_equal(X_czt1, X_czt4, decimal=12)
+    np.testing.assert_almost_equal(X_czt1, X_czt5, decimal=12)
 
     # Compare FFT methods
-    np.testing.assert_allclose(X_czt1, X_czt5, atol=0.1)
     np.testing.assert_allclose(X_czt1, X_czt6, atol=0.1)
     np.testing.assert_allclose(X_czt1, X_czt7, atol=0.1)
 
