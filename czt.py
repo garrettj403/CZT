@@ -45,6 +45,8 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
         M = N
     if W is None:
         W = np.exp(-2j * np.pi / M)
+    A = complex(A)
+    W = complex(W)
         
     if simple:
         k = np.arange(M)
