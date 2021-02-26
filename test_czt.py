@@ -168,9 +168,11 @@ def test_czt_to_iczt(debug=False):
     # Plot for debugging purposes
     if debug:
         plt.figure()
+        plt.title("Real")
         plt.plot(x.real)
         plt.plot(x_iczt.real)
         plt.figure()
+        plt.title("Imaginary")
         plt.plot(x.imag)
         plt.plot(x_iczt.imag)
         plt.show()
@@ -206,11 +208,6 @@ def test_time_to_freq_to_time(debug=False):
 
     # Plot for debugging purposes
     if debug:
-        plt.figure()
-        plt.title("Absolute")
-        plt.plot(t1, np.abs(x1), label='Original')
-        plt.plot(t2, np.abs(x2), label='Recovered', ls='--')
-        plt.legend()
         plt.figure()
         plt.title("Real")
         plt.plot(t1, x1.real, label='Original')
@@ -313,8 +310,8 @@ def test_frequency_zoom(debug=False):
     if debug:
         plt.figure(figsize=(10, 8))
         plt.plot(f_zoom, np.abs(X_czt1), 'c', label='CZT')
-        plt.plot(f_zoom, np.abs(X_czt2), 'r--', label='CZT (zoom)')
         plt.plot(f_zoom, np.abs(X_dft1), 'k--', label='DFT')
+        plt.plot(f_zoom, np.abs(X_czt2), 'r--', label='CZT (zoom)')
         plt.plot(f_zoom, np.abs(X_dft2), 'b:', label='DFT (zoom)')
         plt.legend()
         plt.show()
@@ -345,7 +342,6 @@ def test_compare_czt_to_analytic_expression(debug=False):
     x = model(t)
 
     # CZT
-    # f = np.arange(-20, 20+1e-10, 0.01) * 1e3
     f, X_czt = czt.time2freq(t, x)
 
     # Build frequency domain signal
@@ -373,10 +369,6 @@ def test_compare_czt_to_analytic_expression(debug=False):
 
     # Plot for debugging purposes
     if debug:
-        plt.figure()
-        plt.title("Absolute")
-        plt.plot(f/1e3, np.abs(X_czt))
-        plt.plot(f/1e3, np.abs(X), 'r--')
         plt.figure()
         plt.title("Real")
         plt.plot(f/1e3, X_czt.real)
