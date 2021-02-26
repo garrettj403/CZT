@@ -1,10 +1,15 @@
-"""Chirp Z-transform.
+"""Calculate the Chirp Z-transform (CZT).
 
-Main reference:
+CZT reference:
 
-    Sukhoy, V., Stoytchev, A. Generalizing the inverse FFT off the unit 
-    circle. Sci Rep 9, 14443 (2019). 
-    https://doi.org/10.1038/s41598-019-50234-9
+   Lawrence R. Rabiner, Ronald W. Schafer, and Charles M. Rader, "The chirp 
+   z-transform algorithm and its application," Bell Syst. Tech. J. 48, 
+   1249-1292 (1969).
+
+CZT computation reference:
+
+    Sukhoy, V., Stoytchev, A. "Generalizing the inverse FFT off the unit 
+    circle," Sci Rep 9, 14443 (2019). 
 
 """
 
@@ -16,18 +21,18 @@ from scipy.signal import kaiser
 # CZT TRANSFORM --------------------------------------------------------------
 
 def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
-    """Calculate Chirp Z-transform (CZT).
+    """Calculate the Chirp Z-transform (CZT).
 
-    Using an efficient algorithm. Solves in O(n log n) time.
+    Uses an efficient algorithm. Solves in O(n log n) time.
 
-    See algorithm 1 in Sukhoy & Stoytchev 2019 (full reference in README).
+    See algorithm 1 in Sukhoy & Stoytchev 2019.
 
     Args:
         x (np.ndarray): input array
         M (int): length of output array
         W (complex): complex ratio between points
         A (complex): complex starting point
-        simple (bool): use simple algorithm?
+        simple (bool): use simple algorithm? (very slow)
         t_method (str): Toeplitz matrix multiplication method. 'ce' for 
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
             for simple matrix multiplication, 'scipy' for matmul_toeplitz
@@ -41,7 +46,8 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
         np.ndarray: Chirp Z-transform
 
     """
-    
+
+    # Unpack arguments
     N = len(x)
     if M is None:
         M = N
@@ -49,7 +55,8 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
         W = np.exp(-2j * np.pi / M)
     A = complex(A)
     W = complex(W)
-        
+    
+    # Simple algorithm (very slow)
     if simple:
         k = np.arange(M)
         X = np.zeros(M, dtype=complex)
@@ -59,7 +66,8 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
         return X
 
     if f_method == 'fast':
-        print("Warning: 'fast' doesn't seem to work very well. More testing needed.")
+        print("Warning: f_method='fast' doesn't seem to work very well...")
+        print("More testing required.")
 
     k = np.arange(N)
     X = W ** (k ** 2 / 2) * A ** -k * x
@@ -73,7 +81,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='ce', f_method='std'):
     elif t_method.lower() == 'mm':
         X = np.matmul(toeplitz(c, r), X)
     elif t_method.lower() == 'scipy':
-        X = matmul_toeplitz((c,r), X)
+        X = matmul_toeplitz((c, r), X)
     else:
         print("t_method not recognized.")
         raise ValueError
