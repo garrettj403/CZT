@@ -1,7 +1,8 @@
 """Benchmark czt.czt function."""
 
+import contextlib
+import os
 import timeit
-import time
 import numpy as np
 import czt
 
@@ -36,14 +37,18 @@ def test4():
 def test5():
     czt.czt(x, t_method='scipy')
     return
-# def test6():
-#     czt.czt(x, t_method='ce', f_method='fast')
-#     return
-# def test7():
-#     czt.czt(x, t_method='pd', f_method='fast')
-#     return
+def test6():
+    # Capture print statements
+    with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):
+        czt.czt(x, t_method='ce', f_method='fast')
+    return
+def test7():
+    # Capture print statements
+    with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):
+        czt.czt(x, t_method='pd', f_method='fast')
+    return
 
-N = 100
+N = 1000
 setup = "from __main__ import test1 as test"
 print("Test 1: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
 setup = "from __main__ import test2 as test"
@@ -54,7 +59,7 @@ setup = "from __main__ import test4 as test"
 print("Test 4: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
 setup = "from __main__ import test5 as test"
 print("Test 5: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
-# setup = "from __main__ import test6 as test"
-# print("Test 6: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
-# setup = "from __main__ import test7 as test"
-# print("Test 7: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+setup = "from __main__ import test6 as test"
+print("Test 6: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+setup = "from __main__ import test7 as test"
+print("Test 7: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
