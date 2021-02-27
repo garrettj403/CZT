@@ -37,9 +37,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='std'
             for simple matrix multiplication, 'scipy' for matmul_toeplitz
             from scipy.linalg.
         f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
-            'fast' for a method that may be faster for large arrays. Warning:
-            'fast' doesn't seem to work very well. More testing required.
-            Ignored for t_method 'mm' and 'scipy'.
+            'fast' for a method that may be faster for large arrays. 
 
     Returns:
         np.ndarray: Chirp Z-transform
@@ -63,10 +61,6 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='std'
         for n in range(N):
             X += x[n] * z ** -n
         return X
-
-    if f_method == 'fast':
-        print("Warning: f_method='fast' doesn't seem to work very well...")
-        print("More testing required.")
 
     # Algorithm 1 from Sukhoy & Stoytchev 2019
     k = np.arange(N)
@@ -110,9 +104,7 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='std'
             for simple matrix multiplication, 'scipy' for matmul_toeplitz
             from scipy.linalg.
         f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
-            'fast' for a method that may be faster for large arrays. Warning:
-            'fast' doesn't seem to work very well. More testing required.
-            Ignored for t_method 'mm' and 'scipy'.
+            'fast' for a method that may be faster for large arrays.
 
     Returns:
         np.ndarray: Inverse Chirp Z-transform

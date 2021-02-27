@@ -1,7 +1,5 @@
 """Benchmark czt.czt function."""
 
-import contextlib
-import os
 import timeit
 import numpy as np
 import czt
@@ -38,14 +36,10 @@ def test5():
     czt.czt(x, t_method='scipy')
     return
 def test6():
-    # Capture print statements
-    with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):
-        czt.czt(x, t_method='ce', f_method='fast')
+    czt.czt(x, t_method='ce', f_method='fast')
     return
 def test7():
-    # Capture print statements
-    with open(os.devnull, "w") as f, contextlib.redirect_stdout(f):
-        czt.czt(x, t_method='pd', f_method='fast')
+    czt.czt(x, t_method='pd', f_method='fast')
     return
 
 N = 100
