@@ -15,7 +15,6 @@ CZT computation reference:
 
 import numpy as np
 from scipy.linalg import toeplitz, matmul_toeplitz
-from scipy.signal import kaiser
 
 
 # CZT TRANSFORM --------------------------------------------------------------
@@ -282,69 +281,6 @@ def freq2time(f, X, t=None, t_orig=None):
     # phase = np.exp(2j * np.pi * (f1 + df / 2) * n * dt)
 
     return t, time_data * phase / k
-
-
-# WINDOW ---------------------------------------------------------------------
-
-def get_window(f, f_start=None, f_stop=None, beta=6):
-    """Get Kaiser-Bessel window.
-
-    See: https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.signal.kaiser.html
-    
-    Args:
-        f (np.ndarray): frequency 
-        f_start (float): start frequency
-        f_stop (float): stop frequency
-        beta (float): KB parameter for Kaiser Bessel filter
-
-    Returns:
-        np.ndarray: windowed S-parameter
-
-    """
-
-    # Frequency limits
-    if f_start is None:
-        f_start = f.min()
-    if f_stop is None:
-        f_stop = f.max()
-
-    # Get corresponding indices
-    idx_start = np.abs(f - f_start).argmin()
-    idx_stop  = np.abs(f - f_stop).argmin()
-    idx_span  = idx_stop - idx_start
-
-    # Make window
-    window = np.r_[np.zeros(idx_start),
-                    kaiser(idx_span, beta),
-                    np.zeros(len(f) - idx_stop)]
-
-    return window 
-
-
-def window(f, s, f_start=None, f_stop=None, beta=6, normalize=True):
-    """Window frequency-domain data using Kaiser-Bessel filter.
-    
-    Args:
-        f (np.ndarray): frequency 
-        s (np.ndarray): S-parameter
-        f_start (float): start frequency
-        f_stop (float): stop frequency
-        beta (float): KB parameter for Kaiser Bessel filter
-
-    Returns:
-        np.ndarray: windowed S-parameter
-
-    """
-
-    _window = get_window(f, f_start=f_start, f_stop=f_stop, beta=beta)
-
-    # Normalize
-    if normalize:
-        w0 = np.mean(_window)
-    else:
-        w0 = 1
-
-    return s * _window / w0
 
 
 # HELPER FUNCTIONS -----------------------------------------------------------
