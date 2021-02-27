@@ -233,7 +233,6 @@ def time2freq(t, x, f=None, f_orig=None):
     """
 
     # Input time array
-    t1, t2 = t.min(), t.max()  # start / stop time
     dt = t[1] - t[0]           # time step
     Nt = len(t)                # number of time points
     Fs = 1 / dt                # sampling frequency
@@ -242,7 +241,6 @@ def time2freq(t, x, f=None, f_orig=None):
     if f is None:
         f = np.linspace(-Fs / 2, Fs / 2, Nt)
     f1, f2 = f.min(), f.max()  # start / stop
-    df = f[1] - f[0]           # frequency step
     bw = f2 - f1               # bandwidth
     Nf = len(f)                # number of frequency points
 
@@ -253,7 +251,6 @@ def time2freq(t, x, f=None, f_orig=None):
         k = 1 / (dt * (f.max() - f.min()))
 
     # Step
-    # W = np.exp(-2j * np.pi * bw / Nf / Fs)
     W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
 
     # Starting point
@@ -283,7 +280,6 @@ def freq2time(f, X, t=None, t_orig=None):
     f1, f2 = f.min(), f.max()  # start / stop frequency
     df = f[1] - f[0]           # frequency step
     bw = f2 - f1               # bandwidth
-    fc = (f1 + f2) / 2         # center frequency
     Nf = len(f)                # number of frequency points
     t_alias = 1 / df           # alias-free interval
 
@@ -302,7 +298,6 @@ def freq2time(f, X, t=None, t_orig=None):
         k = 1
 
     # Step
-    # W = np.exp(-2j * np.pi * bw / Nf / Fs)
     W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
 
     # Starting point
@@ -314,7 +309,6 @@ def freq2time(f, X, t=None, t_orig=None):
     # Phase shift
     n = np.arange(len(time_data))
     phase = np.exp(2j * np.pi * f1 * n * dt)
-    # phase = np.exp(2j * np.pi * (f1 + df / 2) * n * dt)
 
     return t, time_data * phase / k
 
