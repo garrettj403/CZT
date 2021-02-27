@@ -19,7 +19,7 @@ from scipy.linalg import toeplitz, matmul_toeplitz
 
 # CZT TRANSFORM --------------------------------------------------------------
 
-def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='std'):
+def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='numpy'):
     """Calculate the Chirp Z-transform (CZT).
 
     Uses an efficient algorithm. Solves in O(n log n) time.
@@ -36,8 +36,9 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='std'
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
             for simple matrix multiplication, 'scipy' for matmul_toeplitz
             from scipy.linalg.
-        f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
-            'fast' for a method that may be faster for large arrays. 
+        f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
+            for recursive method. Ignored if you are using simple ICZT
+            method.
 
     Returns:
         np.ndarray: Chirp Z-transform
@@ -85,7 +86,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='std'
     return X
 
 
-def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='std'):
+def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='numpy'):
     """Calculate inverse Chirp Z-transform (ICZT).
 
     Uses an efficient algorithm. Solves in O(n log n) time.
@@ -102,9 +103,11 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='std'
         t_method (str): Toeplitz matrix multiplication method. 'ce' for 
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
             for simple matrix multiplication, 'scipy' for matmul_toeplitz
-            from scipy.linalg.
-        f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
-            'fast' for a method that may be faster for large arrays.
+            from scipy.linalg. Ignored if you are not using the simple ICZT
+            method.
+        f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
+            for recursive method. Ignored if you are not using the simple ICZT
+            method.
 
     Returns:
         np.ndarray: Inverse Chirp Z-transform
@@ -318,7 +321,7 @@ def freq2time(f, X, t=None, t_orig=None):
 
 # HELPER FUNCTIONS -----------------------------------------------------------
 
-def _toeplitz_mult_ce(r, c, x, f_method='std'):
+def _toeplitz_mult_ce(r, c, x, f_method='numpy'):
     """Multiply Toeplitz matrix by vector using circulant embedding.
     
     "Compute the product y = Tx of a Toeplitz matrix T and a vector x, where T
@@ -331,8 +334,8 @@ def _toeplitz_mult_ce(r, c, x, f_method='std'):
         r (np.ndarray): first row of Toeplitz matrix
         c (np.ndarray): first column of Toeplitz matrix
         x (np.ndarray): vector to multiply the Toeplitz matrix
-        f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
-            'fast' for a method that may be faster for large arrays.
+        f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
+            for recursive method.
     
     Returns:
         np.ndarray: product of Toeplitz matrix and vector x
@@ -352,7 +355,7 @@ def _toeplitz_mult_ce(r, c, x, f_method='std'):
     return y
 
 
-def _toeplitz_mult_pd(r, c, x, f_method='std'):
+def _toeplitz_mult_pd(r, c, x, f_method='numpy'):
     """Multiply Toeplitz matrix by vector using Pustylnikov's decomposition.
     
     Compute the product y = Tx of a Toeplitz matrix T and a vector x, where T
@@ -365,8 +368,8 @@ def _toeplitz_mult_pd(r, c, x, f_method='std'):
         r (np.ndarray): first row of Toeplitz matrix
         c (np.ndarray): first column of Toeplitz matrix
         x (np.ndarray): vector to multiply the Toeplitz matrix
-        f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
-            'fast' for a method that may be faster for large arrays.
+        f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
+            for recursive method.
     
     Returns:
         np.ndarray: product of Toeplitz matrix and vector x
@@ -415,7 +418,7 @@ def _zero_pad(x, n):
     return xhat
 
 
-def _circulant_multiply(c, x, f_method='std'):
+def _circulant_multiply(c, x, f_method='numpy'):
     """Multiply a circulant matrix by a vector.
     
     Compute the product y = Gx of a circulant matrix G and a vector x, where G
@@ -428,8 +431,8 @@ def _circulant_multiply(c, x, f_method='std'):
     Args:
         c (np.ndarray): first column of circulant matrix G
         x (np.ndarray): vector x
-        f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
-            'fast' for a method that may be faster for large arrays.
+        f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
+            for recursive method.
 
     Returns:
         np.ndarray: product Gx
@@ -437,14 +440,14 @@ def _circulant_multiply(c, x, f_method='std'):
     """
     n = len(c)
     assert len(x) == n
-    if f_method == 'std':
+    if f_method == 'numpy':
         C = np.fft.fft(c)
         X = np.fft.fft(x)
         Y = np.empty(n, dtype=complex)
         for k in range(n):
             Y[k] = C[k] * X[k]
         y = np.fft.ifft(Y)
-    elif f_method.lower() == 'fast':
+    elif f_method.lower() == 'recursive':
         C = _fft(c)
         X = _fft(x)
         Y = np.empty(n, dtype=complex)
@@ -457,7 +460,7 @@ def _circulant_multiply(c, x, f_method='std'):
     return y
 
 
-def _skew_circulant_multiply(c, x, f_method='std'):
+def _skew_circulant_multiply(c, x, f_method='numpy'):
     """Multiply a skew-circulant matrix by a vector.
     
     Runs in O(n log n) time.
@@ -467,8 +470,8 @@ def _skew_circulant_multiply(c, x, f_method='std'):
     Args:
         c (np.ndarray): first column of skew-circulant matrix G
         x (np.ndarray): vector x
-        f_method (str): FFT method. 'std' for standard FFT (from NumPy), or 
-            'fast' for a method that may be faster for large arrays.
+        f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
+            for recursive method.
 
     Returns:
         np.ndarray: product Gx
@@ -491,7 +494,7 @@ def _skew_circulant_multiply(c, x, f_method='std'):
 
 
 def _fft(x):
-    """FFT algorithm. Runs in O(n log n) time.
+    """Recursive FFT algorithm. Runs in O(n log n) time.
 
     Args:
         x (np.ndarray): input
@@ -516,7 +519,7 @@ def _fft(x):
 
 
 def _ifft(y):
-    """IFFT algorithm. Runs in O(n log n) time.
+    """Recursive IFFT algorithm. Runs in O(n log n) time.
 
     Args:
         y (np.ndarray): input

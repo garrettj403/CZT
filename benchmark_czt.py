@@ -36,10 +36,10 @@ def test5():
     czt.czt(x, t_method='scipy')
     return
 def test6():
-    czt.czt(x, t_method='ce', f_method='fast')
+    czt.czt(x, t_method='ce', f_method='recursive')
     return
 def test7():
-    czt.czt(x, t_method='pd', f_method='fast')
+    czt.czt(x, t_method='pd', f_method='recursive')
     return
 
 N = 100

@@ -37,8 +37,8 @@ def test_compare_different_czt_methods(debug=False):
     X_czt3 = czt.czt(x, t_method='pd')
     X_czt4 = czt.czt(x, t_method='mm')
     X_czt5 = czt.czt(x, t_method='scipy')
-    X_czt6 = czt.czt(x, t_method='ce', f_method='fast')
-    X_czt7 = czt.czt(x, t_method='pd', f_method='fast')
+    X_czt6 = czt.czt(x, t_method='ce', f_method='recursive')
+    X_czt7 = czt.czt(x, t_method='pd', f_method='recursive')
 
     # Plot for debugging purposes
     if debug:
