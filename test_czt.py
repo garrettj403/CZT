@@ -164,6 +164,7 @@ def test_czt_to_iczt(debug=False):
 
     # ICZT
     x_iczt = czt.iczt(X_czt)
+    x_iczt2 = czt.iczt(X_czt, simple=False)
 
     # Plot for debugging purposes
     if debug:
@@ -171,14 +172,17 @@ def test_czt_to_iczt(debug=False):
         plt.title("Real")
         plt.plot(x.real)
         plt.plot(x_iczt.real)
+        plt.plot(x_iczt2.real)
         plt.figure()
         plt.title("Imaginary")
         plt.plot(x.imag)
         plt.plot(x_iczt.imag)
+        plt.plot(x_iczt2.imag)
         plt.show()
 
     # Compare
     np.testing.assert_almost_equal(x, x_iczt, decimal=12)
+    np.testing.assert_almost_equal(x, x_iczt2, decimal=12)
 
 
 def test_time_to_freq_to_time(debug=False):
