@@ -296,6 +296,9 @@ def test_compare_czt_to_analytic_expression(debug=False):
     # Build frequency domain signal
     X = _signal_model_f(f, len(t))
 
+    # Transform back to time-domain
+    _, x_iczt = czt.freq2time(f, X_czt, t)
+
     # Truncate
     mask = (0 < f) & (f < 5e3)
     f, X, X_czt = f[mask], X[mask], X_czt[mask]
@@ -303,21 +306,32 @@ def test_compare_czt_to_analytic_expression(debug=False):
     # Plot for debugging purposes
     if debug:
         plt.figure()
-        plt.title("Imaginary")
+        plt.title("Freq-Domain: Imaginary")
         plt.plot(f/1e3, X_czt.imag)
         plt.plot(f/1e3, X.imag, 'r--')
         plt.figure()
-        plt.title("Real")
+        plt.title("Freq-Domain: Real")
         plt.plot(f / 1e3, X_czt.real)
         plt.plot(f / 1e3, X.real, 'r--')
         plt.figure()
-        plt.title("Absolute")
+        plt.title("Freq-Domain: Absolute")
         plt.plot(f / 1e3, np.abs(X_czt))
         plt.plot(f / 1e3, np.abs(X), 'r--')
+        plt.figure()
+        plt.title("Time-Domain: Imaginary")
+        plt.plot(t * 1e3, np.imag(x))
+        plt.plot(t * 1e3, np.imag(x_iczt), 'r--')
+        plt.xlim([0, 5])
+        plt.figure()
+        plt.title("Time-Domain: Real")
+        plt.plot(t * 1e3, np.real(x))
+        plt.plot(t * 1e3, np.real(x_iczt), 'r--')
+        plt.xlim([0, 5])
         plt.show()
 
     # Compare
     np.testing.assert_allclose(X, X_czt, atol=0.02)
+    np.testing.assert_allclose(x, x_iczt, atol=0.02)
 
 
 def _signal_model(tt):
