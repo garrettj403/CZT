@@ -91,14 +91,20 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='std'
     return X
 
 
-def iczt(X, N=None, W=None, A=1.0, t_method='scipy', f_method='std'):
+def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='std'):
     """Calculate inverse Chirp Z-transform (ICZT).
+
+    Uses an efficient algorithm. Solves in O(n log n) time.
+
+    See algorithm 2 in Sukhoy & Stoytchev 2019.
 
     Args:
         X (np.ndarray): input array
         N (int): length of output array
         W (complex): complex ratio between points
         A (complex): complex starting point
+        simple (bool): calculate ICZT using simple method (using CZT and
+            conjugate)
         t_method (str): Toeplitz matrix multiplication method. 'ce' for 
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
             for simple matrix multiplication, 'scipy' for matmul_toeplitz
@@ -119,14 +125,46 @@ def iczt(X, N=None, W=None, A=1.0, t_method='scipy', f_method='std'):
     if W is None:
         W = np.exp(-2j * np.pi / M)
 
-    return np.conj(czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)) / M
+    # Simple algorithm
+    if simple:
+        return np.conj(czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)) / M
+
+    # Algorithm 2 from Sukhoy & Stoytchev 2019
+    if M != N:
+        print("M must be equal to N")
+        raise ValueError
+    n = N
+    x = np.empty(n, dtype=complex)
+    for k in range(n):
+        x[k] = W ** (-k ** 2 / 2) * X[k]
+    p = np.empty(n, dtype=complex)
+    p[0] = 1
+    for k in range(1, n):
+        p[k] = p[k - 1] * (W ** k - 1)
+    u = np.empty(n, dtype=complex)
+    for k in range(n):
+        u[k] = (-1)**k * W**((2*k**2-(2*n-1)*k+n*(n-1))/2) / (p[n-k-1]*p[k])
+    z = np.zeros(n, dtype=complex)
+    uhat = np.r_[0, u[1::][::-1]]
+    util = np.r_[u[0], np.zeros(n-1)]
+    x1 = _toeplitz_mult_ce(uhat, z, x)
+    x1 = _toeplitz_mult_ce(z, uhat, x1)
+    x2 = _toeplitz_mult_ce(u, util, x)
+    x2 = _toeplitz_mult_ce(util, u, x2)
+    for k in range(n):
+        x[k] = (x2[k] - x1[k]) / u[0]
+    for k in range(n):
+        x[k] = A ** k * W ** (-k ** 2 / 2) * x[k]
+    return x
 
 
 # OTHER TRANSFORMS -----------------------------------------------------------
 
 def dft(t, x, f=None):
-    """Convert signal from time-domain to frequency-domain using a Discrete 
+    """Transform signal from time- to frequency-domain using a Discrete
     Fourier Transform (DFT).
+
+    Used for testing CZT algorithm.
 
     Args:
         t (np.ndarray): time
@@ -141,7 +179,9 @@ def dft(t, x, f=None):
     if f is None:
         dt = t[1] - t[0]  # time step
         Fs = 1 / dt       # sample frequency
-        f = np.linspace(-Fs / 2, Fs / 2, len(t))
+        Nf = len(t)       # number of frequency points
+        Nf = Nf + 1 if Nf % 2 == 0 else Nf
+        f = np.linspace(-Fs / 2, Fs / 2, Nf)
 
     X = np.zeros(len(f), dtype=complex)
     for k in range(len(X)):
@@ -151,8 +191,10 @@ def dft(t, x, f=None):
 
 
 def idft(f, X, t=None):
-    """Convert signal from time-domain to frequency-domain using an Inverse 
+    """Transform signal from time- to frequency-domain using an Inverse
     Discrete Fourier Transform (IDFT).
+
+    Used for testing ICZT algorithm.
 
     Args:
         f (np.ndarray): frequency
@@ -172,8 +214,6 @@ def idft(f, X, t=None):
     x = np.zeros(N, dtype=complex)
     for n in range(len(x)):
         x[n] = np.sum(X * np.exp(2j * np.pi * f * t[n]))
-        # for k in range(len(X)):
-        #     x[n] += X[k] * np.exp(2j * np.pi * f[k] * t[n])
     x /= N
 
     return t, x
@@ -237,6 +277,7 @@ def freq2time(f, X, t=None, t_orig=None):
         f (np.ndarray): frequency
         X (np.ndarray): frequency-domain signal
         t (np.ndarray): time for output signal
+        t_orig (np.ndarray): original time-domain time
 
     Returns:
         np.ndarray: time-domain signal
@@ -292,7 +333,7 @@ def _toeplitz_mult_ce(r, c, x, f_method='std'):
     is specified by its first row r = (r[0], r[1], r[2],...,r[N-1]) and its 
     first column c = (c[0], c[1], c[2],...,c[M-1]), where r[0] = c[0]."
     
-    See algorithm S1 in Sukhoy & Stoytchev 2019 (full reference in README).
+    See algorithm S1 in Sukhoy & Stoytchev 2019.
     
     Args:
         r (np.ndarray): first row of Toeplitz matrix
@@ -326,7 +367,7 @@ def _toeplitz_mult_pd(r, c, x, f_method='std'):
     is specified by its first row r = (r[0], r[1], r[2],...,r[N-1]) and its 
     first column c = (c[0], c[1], c[2],...,c[M-1]), where r[0] = c[0].
     
-    See algorithm S3 in Sukhoy & Stoytchev 2019 (full reference in README).
+    See algorithm S3 in Sukhoy & Stoytchev 2019.
     
     Args:
         r (np.ndarray): first row of Toeplitz matrix
@@ -365,7 +406,7 @@ def _toeplitz_mult_pd(r, c, x, f_method='std'):
 def _zero_pad(x, n):
     """Zero pad an array x to length n by appending zeros.
     
-    See algorithm S2 in Sukhoy & Stoytchev 2019 (full reference in README).
+    See algorithm S2 in Sukhoy & Stoytchev 2019.
     
     Args:
         x (np.ndarray): array x
@@ -383,14 +424,14 @@ def _zero_pad(x, n):
 
 
 def _circulant_multiply(c, x, f_method='std'):
-    """Multiply a circulat matrix by a vector.
+    """Multiply a circulant matrix by a vector.
     
-    Compute the product y = Gx of a circulat matrix G and a vector x, where G 
+    Compute the product y = Gx of a circulant matrix G and a vector x, where G
     is generated by its first column c=(c[0], c[1],...,c[n-1]).
 
     Runs in O(n log n) time.
 
-    See algorithm S4 in Sukhoy & Stoytchev 2019 (full reference in README).
+    See algorithm S4 in Sukhoy & Stoytchev 2019.
     
     Args:
         c (np.ndarray): first column of circulant matrix G
@@ -429,7 +470,7 @@ def _skew_circulant_multiply(c, x, f_method='std'):
     
     Runs in O(n log n) time.
     
-    See algorithm S7 in Sukhoy & Stoytchev 2019 (full reference in README).
+    See algorithm S7 in Sukhoy & Stoytchev 2019.
     
     Args:
         c (np.ndarray): first column of skew-circulant matrix G
