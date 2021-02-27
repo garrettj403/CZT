@@ -81,8 +81,8 @@ def test_compare_different_czt_methods(debug=False):
     np.testing.assert_almost_equal(X_czt1, X_czt5, decimal=12)
 
     # Compare FFT methods
-    np.testing.assert_allclose(X_czt1, X_czt6, atol=0.1)
-    np.testing.assert_allclose(X_czt1, X_czt7, atol=0.1)
+    np.testing.assert_almost_equal(X_czt1, X_czt6, decimal=12)
+    np.testing.assert_almost_equal(X_czt1, X_czt7, decimal=12)
 
 
 def test_compare_czt_fft_dft(debug=False):
