@@ -68,7 +68,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='std'
         print("Warning: f_method='fast' doesn't seem to work very well...")
         print("More testing required.")
 
-    # Efficient algorithm
+    # Algorithm 1 from Sukhoy & Stoytchev 2019
     k = np.arange(N)
     X = W ** (k ** 2 / 2) * A ** -k * x
     r = W ** (-(k ** 2) / 2)
@@ -513,13 +513,12 @@ def _fft(x):
         return x
     xe = x[0::2]
     xo = x[1::2]
-    y1 = np.fft.fft(xe)
-    y2 = np.fft.fft(xo)
-    # Todo: simplify
-    y = np.zeros(n, dtype=complex)
-    for k in range(n // 2 - 1):
+    y1 = _fft(xe)
+    y2 = _fft(xo)
+    y = np.empty(n, dtype=complex)
+    for k in range(n // 2):
         w = np.exp(-2j * np.pi * k / n)
-        y[k]            = y1[k] + w * y2[k]
+        y[k] = y1[k] + w * y2[k]
         y[k + (n // 2)] = y1[k] - w * y2[k]
     return y
 
@@ -539,12 +538,11 @@ def _ifft(y):
         return y
     ye = y[0::2]
     yo = y[1::2]
-    x1 = np.fft.ifft(ye)
-    x2 = np.fft.ifft(yo)
-    # TODO: simplify
+    x1 = _ifft(ye)
+    x2 = _ifft(yo)
     x = np.zeros(n, dtype=complex)
-    for k in range(n // 2 -1):
+    for k in range(n // 2):
         w = np.exp(2j * np.pi * k / n)
-        x[k]            = (x1[k] + w * x2[k]) / 2
+        x[k] = (x1[k] + w * x2[k]) / 2
         x[k + (n // 2)] = (x1[k] - w * x2[k]) / 2
     return x
