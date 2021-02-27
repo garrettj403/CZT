@@ -30,8 +30,9 @@ def test2():
     czt.iczt(X, simple=False)
     return
 
-N = 1000
+N = 100
 setup = "from __main__ import test1 as test"
-print("Test 1: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+print("Test 1: {:7.4f} ms".format(timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000))
+N = 100
 setup = "from __main__ import test2 as test"
-print("Test 2: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+print("Test 2: {:7.4f} ms".format(timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000))

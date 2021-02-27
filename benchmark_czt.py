@@ -48,18 +48,24 @@ def test7():
         czt.czt(x, t_method='pd', f_method='fast')
     return
 
-N = 1000
+N = 100
 setup = "from __main__ import test1 as test"
-print("Test 1: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+print("Test 1: {:7.4f} ms".format(timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000))
+N = 1000
 setup = "from __main__ import test2 as test"
-print("Test 2: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+print("Test 2: {:7.4f} ms".format(timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000))
+N = 100
 setup = "from __main__ import test3 as test"
-print("Test 3: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+print("Test 3: {:7.4f} ms".format(timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000))
+N = 1000
 setup = "from __main__ import test4 as test"
-print("Test 4: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+print("Test 4: {:7.4f} ms".format(timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000))
+N = 1000
 setup = "from __main__ import test5 as test"
-print("Test 5: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+print("Test 5: {:7.4f} ms".format(timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000))
+N = 10
 setup = "from __main__ import test6 as test"
-print("Test 6: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+print("Test 6: {:7.4f} ms".format(timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000))
+N = 10
 setup = "from __main__ import test7 as test"
-print("Test 7: ", timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000, " ms")
+print("Test 7: {:7.4f} ms".format(timeit.Timer("test()", setup=setup).timeit(number=N)/N*1000))
