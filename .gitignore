@@ -4,6 +4,7 @@
 .ipynb_checkpoints
 .pytest_cache
 .ropeproject
+.coverage
 
 *.py.bak
 *.pyc
