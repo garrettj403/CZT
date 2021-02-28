@@ -17,12 +17,12 @@ import numpy as np
 from scipy.linalg import toeplitz, matmul_toeplitz
 
 
-# CZT TRANSFORM --------------------------------------------------------------
+# CZT ------------------------------------------------------------------------
 
 def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='numpy'):
     """Calculate the Chirp Z-transform (CZT).
 
-    Uses an efficient algorithm. Solves in O(n log n) time.
+    Solves in O(n log n) time.
 
     See algorithm 1 in Sukhoy & Stoytchev 2019.
 
@@ -80,9 +80,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='nump
     else:
         print("t_method not recognized.")
         raise ValueError
-    X = W ** (k ** 2 / 2) * X
-
-    return X
+    return W ** (k ** 2 / 2) * X
 
 
 def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='numpy'):
@@ -113,11 +111,14 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='nump
 
     """
 
+    # Unpack arguments
     M = len(X)
     if N is None:
         N = M
     if W is None:
         W = np.exp(-2j * np.pi / M)
+    A = np.complex128(A)
+    W = np.complex128(W)
 
     # Simple algorithm
     if simple:
@@ -128,16 +129,16 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='nump
         print("M must be equal to N")
         raise ValueError
     n = N
-    x = np.empty(n, dtype=complex)
-    for k in range(n):
-        x[k] = W ** (-k ** 2 / 2) * X[k]
+    k = np.arange(n)
+    x = W ** (-k ** 2 / 2) * X
     p = np.empty(n, dtype=complex)
     p[0] = 1
-    for k in range(1, n):
-        p[k] = p[k - 1] * (W ** k - 1)
-    u = np.empty(n, dtype=complex)
-    for k in range(n):
-        u[k] = (-1)**k * W**((2*k**2-(2*n-1)*k+n*(n-1))/2) / (p[n-k-1]*p[k])
+    p[1:] = W ** k[1:] - 1
+    for ki in range(1, n):
+        p[ki] *= p[ki - 1]
+    u = (-1) ** k * W ** ((2 * k ** 2 - (2 * n - 1) * k + n * (n - 1)) / 2) / p
+    for ki in range(n):
+        u[ki] /= p[n - ki - 1]
     z = np.zeros(n, dtype=complex)
     uhat = np.r_[0, u[1::][::-1]]
     util = np.r_[u[0], np.zeros(n-1)]
@@ -145,10 +146,8 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='nump
     x1 = _toeplitz_mult_ce(z, uhat, x1)
     x2 = _toeplitz_mult_ce(u, util, x)
     x2 = _toeplitz_mult_ce(util, u, x2)
-    for k in range(n):
-        x[k] = (x2[k] - x1[k]) / u[0]
-    for k in range(n):
-        x[k] = A ** k * W ** (-k ** 2 / 2) * x[k]
+    x = (x2 - x1) / u[0]
+    x = A ** k * W ** (-k ** 2 / 2) * x
     return x
 
 
@@ -177,7 +176,7 @@ def dft(t, x, f=None):
         Nf = Nf + 1 if Nf % 2 == 0 else Nf
         f = np.linspace(-Fs / 2, Fs / 2, Nf)
 
-    X = np.zeros(len(f), dtype=complex)
+    X = np.empty(len(f), dtype=complex)
     for k in range(len(X)):
         X[k] = np.sum(x * np.exp(-2j * np.pi * f[k] * t))
 
@@ -188,7 +187,7 @@ def idft(f, X, t=None):
     """Transform signal from time- to frequency-domain using an Inverse
     Discrete Fourier Transform (IDFT).
 
-    Used for testing ICZT algorithm.
+    Used for testing the ICZT algorithm.
 
     Args:
         f (np.ndarray): frequency
@@ -205,7 +204,7 @@ def idft(f, X, t=None):
         t = np.linspace(0, bw / 2, len(f))
 
     N = len(t)
-    x = np.zeros(N, dtype=complex)
+    x = np.empty(N, dtype=complex)
     for n in range(len(x)):
         x[n] = np.sum(X * np.exp(2j * np.pi * f * t[n]))
     x /= N
@@ -317,11 +316,11 @@ def freq2time(f, X, t=None, t_orig=None):
 def _toeplitz_mult_ce(r, c, x, f_method='numpy'):
     """Multiply Toeplitz matrix by vector using circulant embedding.
     
-    "Compute the product y = Tx of a Toeplitz matrix T and a vector x, where T
-    is specified by its first row r = (r[0], r[1], r[2],...,r[N-1]) and its 
-    first column c = (c[0], c[1], c[2],...,c[M-1]), where r[0] = c[0]."
-    
-    See algorithm S1 in Sukhoy & Stoytchev 2019.
+    See algorithm S1 in Sukhoy & Stoytchev 2019:
+
+       Compute the product y = Tx of a Toeplitz matrix T and a vector x, where
+       T is specified by its first row r = (r[0], r[1], r[2],...,r[N-1]) and 
+       its first column c = (c[0], c[1], c[2],...,c[M-1]), where r[0] = c[0].
     
     Args:
         r (np.ndarray): first row of Toeplitz matrix
@@ -351,11 +350,11 @@ def _toeplitz_mult_ce(r, c, x, f_method='numpy'):
 def _toeplitz_mult_pd(r, c, x, f_method='numpy'):
     """Multiply Toeplitz matrix by vector using Pustylnikov's decomposition.
     
-    Compute the product y = Tx of a Toeplitz matrix T and a vector x, where T
-    is specified by its first row r = (r[0], r[1], r[2],...,r[N-1]) and its 
-    first column c = (c[0], c[1], c[2],...,c[M-1]), where r[0] = c[0].
-    
-    See algorithm S3 in Sukhoy & Stoytchev 2019.
+    See algorithm S3 in Sukhoy & Stoytchev 2019:
+
+       Compute the product y = Tx of a Toeplitz matrix T and a vector x, where
+       T is specified by its first row r = (r[0], r[1], r[2],...,r[N-1]) and
+       its first column c = (c[0], c[1], c[2],...,c[M-1]), where r[0] = c[0].
     
     Args:
         r (np.ndarray): first row of Toeplitz matrix
@@ -380,13 +379,13 @@ def _toeplitz_mult_pd(r, c, x, f_method='numpy'):
         c = _zero_pad(c, n)
     c1 = np.empty(n, dtype=complex)
     c2 = np.empty(n, dtype=complex)
-    c1[0] = 0.5 * c[0]
-    c2[0] = 0.5 * c[0]
+    c1 = c.copy()
+    c2 = c.copy()
     for k in range(1, n):
-        c1[k] = 0.5 * (c[k] + r[n - k])
-        c2[k] = 0.5 * (c[k] - r[n - k])
-    y1 = _circulant_multiply(c1, x, f_method)
-    y2 = _skew_circulant_multiply(c2, x, f_method)
+        c1[k] += r[n - k]
+        c2[k] -= r[n - k]
+    y1 = _circulant_multiply(c1/2, x, f_method)
+    y2 = _skew_circulant_multiply(c2/2, x, f_method)
     y = y1[:M] + y2[:M]
     return y
 
@@ -404,19 +403,20 @@ def _zero_pad(x, n):
     """
     m = len(x)
     assert m <= n
-    xhat = np.r_[x, np.zeros(n - m)]
+    xhat = np.zeros(n, dtype=complex)
+    xhat[:m] = x
     return xhat
 
 
 def _circulant_multiply(c, x, f_method='numpy'):
     """Multiply a circulant matrix by a vector.
     
-    Compute the product y = Gx of a circulant matrix G and a vector x, where G
-    is generated by its first column c=(c[0], c[1],...,c[n-1]).
-
     Runs in O(n log n) time.
 
-    See algorithm S4 in Sukhoy & Stoytchev 2019.
+    See algorithm S4 in Sukhoy & Stoytchev 2019:
+
+       Compute the product y = Gx of a circulant matrix G and a vector x, 
+       where G is generated by its first column c=(c[0], c[1],...,c[n-1]).
     
     Args:
         c (np.ndarray): first column of circulant matrix G
@@ -434,16 +434,15 @@ def _circulant_multiply(c, x, f_method='numpy'):
         C = np.fft.fft(c)
         X = np.fft.fft(x)
         Y = C * X
-        y = np.fft.ifft(Y)
+        return np.fft.ifft(Y)
     elif f_method.lower() == 'recursive':
         C = _fft(c)
         X = _fft(x)
         Y = C * X
-        y = _ifft(Y)
+        return _ifft(Y)
     else:
         print("f_method not recognized.")
         raise ValueError
-    return y
 
 
 def _skew_circulant_multiply(c, x, f_method='numpy'):
