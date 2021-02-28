@@ -80,8 +80,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='nump
     else:
         print("t_method not recognized.")
         raise ValueError
-    for k in range(M):
-        X[k] = W ** (k ** 2 / 2) * X[k]
+    X = W ** (k ** 2 / 2) * X
 
     return X
 
@@ -394,9 +393,7 @@ def _toeplitz_mult_pd(r, c, x, f_method='numpy'):
 
 def _zero_pad(x, n):
     """Zero pad an array x to length n by appending zeros.
-    
-    See algorithm S2 in Sukhoy & Stoytchev 2019.
-    
+        
     Args:
         x (np.ndarray): array x
         n (int): length of output array
@@ -407,8 +404,7 @@ def _zero_pad(x, n):
     """
     m = len(x)
     assert m <= n
-    xhat = np.zeros(n, dtype=complex)
-    xhat[:m] = x
+    xhat = np.r_[x, np.zeros(n - m)]
     return xhat
 
 
@@ -437,16 +433,12 @@ def _circulant_multiply(c, x, f_method='numpy'):
     if f_method == 'numpy':
         C = np.fft.fft(c)
         X = np.fft.fft(x)
-        Y = np.empty(n, dtype=complex)
-        for k in range(n):
-            Y[k] = C[k] * X[k]
+        Y = C * X
         y = np.fft.ifft(Y)
     elif f_method.lower() == 'recursive':
         C = _fft(c)
         X = _fft(x)
-        Y = np.empty(n, dtype=complex)
-        for k in range(n):
-            Y[k] = C[k] * X[k]
+        Y = C * X
         y = _ifft(Y)
     else:
         print("f_method not recognized.")
@@ -473,17 +465,11 @@ def _skew_circulant_multiply(c, x, f_method='numpy'):
     """
     n = len(c)
     assert len(x) == n
-    chat = np.empty(n, dtype=complex)
-    xhat = np.empty(n, dtype=complex)
-    for k in range(n):
-        chat[k] = c[k] * np.exp(-1j * k * np.pi / n)
-        xhat[k] = x[k] * np.exp(-1j * k * np.pi / n)
-    # k = np.arange(n, dtype=complex)
-    # chat = c * np.exp(-1j * k * np.pi / n)
-    # xhat = c * np.exp(-1j * k * np.pi / n)
+    k = np.arange(n, dtype=float)
+    chat = c * np.exp(-1j * k * np.pi / n)
+    xhat = x * np.exp(-1j * k * np.pi / n)
     y = _circulant_multiply(chat, xhat, f_method)
-    for k in range(n):
-        y[k] = y[k] * np.exp(1j * k * np.pi / n)
+    y = y * np.exp(1j * k * np.pi / n)
     return y
 
 
@@ -504,11 +490,11 @@ def _fft(x):
     xo = x[1::2]
     y1 = _fft(xe)
     y2 = _fft(xo)
+    k = np.arange(n // 2)
+    w = np.exp(-2j * np.pi * k / n)
     y = np.empty(n, dtype=complex)
-    for k in range(n // 2):
-        w = np.exp(-2j * np.pi * k / n)
-        y[k] = y1[k] + w * y2[k]
-        y[k + (n // 2)] = y1[k] - w * y2[k]
+    y[:n//2] = y1 + w * y2
+    y[n//2:] = y1 - w * y2
     return y
 
 
@@ -529,9 +515,9 @@ def _ifft(y):
     yo = y[1::2]
     x1 = _ifft(ye)
     x2 = _ifft(yo)
-    x = np.zeros(n, dtype=complex)
-    for k in range(n // 2):
-        w = np.exp(2j * np.pi * k / n)
-        x[k] = (x1[k] + w * x2[k]) / 2
-        x[k + (n // 2)] = (x1[k] - w * x2[k]) / 2
+    k = np.arange(n // 2)
+    w = np.exp(2j * np.pi * k / n)
+    x = np.empty(n, dtype=complex)
+    x[:n//2] = (x1 + w * x2) / 2
+    x[n//2:] = (x1 - w * x2) / 2
     return x
