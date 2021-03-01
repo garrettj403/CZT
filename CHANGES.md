@@ -1,3 +1,16 @@
+v0.0.4 (Feb 27, 2021)
+=====================
+
+- CZT:
+	- Change default ``t_method`` to ``'scipy'`` (fastest).
+	- czt.iczt: add option to use algorithm 2 from Sukhoy & Stoytchev 2019.
+	- Fix error in fft and ifft algorithms. Remove warnings now that they work.
+	- Rename ``f_method``: ``"std"`` -> ``"numpy"``, ``"fast"`` -> ``"recursive"``
+- Benchmark:
+	- Add benchmarks for czt.czt and czt.iczt.
+- Misc:
+	- Remove windowing functions (unnecessary).
+
 v0.0.3 (Feb 26, 2021)
 =====================
 
