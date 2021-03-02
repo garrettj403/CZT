@@ -375,13 +375,8 @@ def _toeplitz_mult_pd(r, c, x, f_method="numpy"):
         x = _zero_pad(x, n)
     if M != n:
         c = _zero_pad(c, n)
-    c1 = np.empty(n, dtype=complex)
-    c2 = np.empty(n, dtype=complex)
-    c1 = c.copy()
-    c2 = c.copy()
-    for k in range(1, n):
-        c1[k] += r[n - k]
-        c2[k] -= r[n - k]
+    c1 = np.r_[c[0], c[1:]+r[-1:0:-1]]
+    c2 = np.r_[c[0], c[1:]-r[-1:0:-1]]
     y1 = _circulant_multiply(c1 / 2, x, f_method)
     y2 = _skew_circulant_multiply(c2 / 2, x, f_method)
     y = y1[:M] + y2[:M]
@@ -463,10 +458,11 @@ def _skew_circulant_multiply(c, x, f_method="numpy"):
     n = len(c)
     assert len(x) == n
     k = np.arange(n, dtype=float)
-    chat = c * np.exp(-1j * k * np.pi / n)
-    xhat = x * np.exp(-1j * k * np.pi / n)
+    prefac = np.exp(-1j * k * np.pi / n)
+    chat = c * prefac
+    xhat = x * prefac
     y = _circulant_multiply(chat, xhat, f_method)
-    y = y * np.exp(1j * k * np.pi / n)
+    y *= prefac.conjugate()
     return y
 
 
