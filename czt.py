@@ -20,7 +20,7 @@ from scipy.linalg import toeplitz, matmul_toeplitz
 # CZT ------------------------------------------------------------------------
 
 
-def czt(x, M=None, W=None, A=1.0, simple=False, t_method="scipy", f_method="numpy"):
+def czt(x, M=None, W=None, A=1.0, simple=False, t_method="ce", f_method="numpy"):
     """Calculate the Chirp Z-transform (CZT).
 
     Solves in O(n log n) time.
