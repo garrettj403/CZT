@@ -5,6 +5,7 @@
 .pytest_cache
 .ropeproject
 .coverage
+.vscode
 
 *.py.bak
 *.pyc
