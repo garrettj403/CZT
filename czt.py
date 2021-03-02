@@ -18,6 +18,12 @@ from scipy.linalg import toeplitz, matmul_toeplitz
 
 
 # CZT ------------------------------------------------------------------------
+_available_t_methods = {
+    "ce": _toeplitz_mult_ce,
+    "pd": _toeplitz_mult_pd,
+    "mm": lambda r, c, x, _: np.matmul(toeplitz(c, r), x),
+    "scipy": lambda r, c, x, _: matmul_toeplitz((c, r), x),
+}
 
 
 def czt(x, M=None, W=None, A=1.0, simple=False, t_method="scipy", f_method="numpy"):
@@ -70,16 +76,13 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="scipy", f_method="nump
     r = Wk22[:M]
     c = Wk22[:N]
     X = r.conjugate() * A ** -k * x
-    if t_method.lower() == "ce":
-        X = _toeplitz_mult_ce(r, c, X, f_method)
-    elif t_method.lower() == "pd":
-        X = _toeplitz_mult_pd(r, c, X, f_method)
-    elif t_method.lower() == "mm":
-        X = np.matmul(toeplitz(c, r), X)
-    elif t_method.lower() == "scipy":
-        X = matmul_toeplitz((c, r), X)
-    else:
-        raise ValueError("t_method not recognized.")
+    try:
+        toeplitz_mult = _available_t_methods[t_method]  # now this raises an index error
+    except IndexError:
+        raise ValueError(
+            f"t_method {t_method} not recognized. Must be one of {_available_t_methods.keys()}"
+        )
+    X = toeplitz_mult(r, c, X, f_method)
     return c.conjugate() * X
 
 
@@ -137,24 +140,24 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
     Wk22 = W ** (-(k ** 2) / 2)
     x = Wk22 * X
     p = np.r_[1, (W ** k[1:] - 1).cumprod()]
-    u = (-1) ** k * W ** ((2 * k ** 2 - (2 * n - 1) * k + n * (n - 1)) / 2) / p
-    u /= p[::-1]
+    u = (-1) ** k * W ** (k * (k - n + 0.5) + (n / 2 - 0.5) * n) / (p * p[::-1])
+    # equivalent to:
+    # u = (-1) ** k * W ** ((2 * k ** 2 - (2 * n - 1) * k + n * (n - 1)) / 2) / p
+    # u /= p[::-1]
     z = np.zeros(n, dtype=complex)
     uhat = np.r_[0, u[-1:0:-1]]
     util = np.r_[u[0], np.zeros(n - 1)]
-    # Note: there is difference in accuracy here. Have to check.
-    if t_method == "scipy":
-        x1 = matmul_toeplitz((z, uhat), x)
-        x1 = matmul_toeplitz((uhat, z), x1)
-        x2 = matmul_toeplitz((util, u), x)
-        x2 = matmul_toeplitz((u, util), x2)
-    elif t_method == "ce":
-        x1 = _toeplitz_mult_ce(uhat, z, x)
-        x1 = _toeplitz_mult_ce(z, uhat, x1)
-        x2 = _toeplitz_mult_ce(u, util, x)
-        x2 = _toeplitz_mult_ce(util, u, x2)
-    else:
-        raise ValueError("For simple=False iczt t_method must be 'scipy' or 'ce'.")
+    try:
+        toeplitz_mult = _available_t_methods[t_method]  # now this raises an index error
+    except IndexError:
+        raise ValueError(
+            f"t_method {t_method} not recognized. Must be one of {_available_t_methods.keys()}"
+        )
+    # Note: there is difference in accuracy here depending on the method. Have to check.
+    x1 = toeplitz_mult(uhat, z, x, f_method)
+    x1 = toeplitz_mult(z, uhat, x1, f_method)
+    x2 = toeplitz_mult(u, util, x, f_method)
+    x2 = toeplitz_mult(util, u, x2, f_method)
     x = (x2 - x1) / u[0]
     x = A ** k * Wk22 * x
     return x
