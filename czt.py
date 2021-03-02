@@ -140,10 +140,10 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
     Wk22 = W ** (-(k ** 2) / 2)
     x = Wk22 * X
     p = np.r_[1, (W ** k[1:] - 1).cumprod()]
-    u = (-1) ** k * W ** (k * (k - n + 0.5) + (n / 2 - 0.5) * n) / (p * p[::-1])
+    u = (-1) ** k * W ** (k * (k - n + 0.5) + (n / 2 - 0.5) * n) / p
     # equivalent to:
     # u = (-1) ** k * W ** ((2 * k ** 2 - (2 * n - 1) * k + n * (n - 1)) / 2) / p
-    # u /= p[::-1]
+    u /= p[::-1]
     z = np.zeros(n, dtype=complex)
     uhat = np.r_[0, u[-1:0:-1]]
     util = np.r_[u[0], np.zeros(n - 1)]
