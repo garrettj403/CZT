@@ -1,3 +1,12 @@
+v0.0.5 (Mar 2, 2021)
+====================
+
+- CZT:
+	- Optimize code to run faster (approx. x4)
+	- Change default `t_method` to `'ce'` (fastest, see benchmark scripts)
+- Benchmark:
+	- Use perfplots to iterate over a range of input sizes
+
 v0.0.4 (Feb 27, 2021)
 =====================
 
