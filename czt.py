@@ -66,9 +66,9 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="scipy", f_method="nump
     # Algorithm 1 from Sukhoy & Stoytchev 2019
     k = np.arange(max(M, N))
     Wk22 = W ** (-(k ** 2) / 2)
-    r = Wk22[:M]
-    c = Wk22[:N]
-    X = r.conjugate() * A ** -k * x
+    r = Wk22[:N]
+    c = Wk22[:M]
+    X = A ** -k * x / r
     try:
         toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
     except KeyError:
@@ -76,7 +76,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="scipy", f_method="nump
             f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}"
         )
     X = toeplitz_mult(r, c, X, f_method)
-    return c.conjugate() * X
+    return X / c
 
 
 def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="numpy"):
