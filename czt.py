@@ -18,8 +18,15 @@ from scipy.linalg import toeplitz, matmul_toeplitz
 
 
 # CZT ------------------------------------------------------------------------
+_available_t_methods = {
+    "ce": _toeplitz_mult_ce,
+    "pd": _toeplitz_mult_pd,
+    "mm": lambda r, c, x, _: np.matmul(toeplitz(c, r), x),
+    "scipy": lambda r, c, x, _: matmul_toeplitz((c, r), x),
+}
 
-def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='numpy'):
+
+def czt(x, M=None, W=None, A=1.0, simple=False, t_method="scipy", f_method="numpy"):
     """Calculate the Chirp Z-transform (CZT).
 
     Solves in O(n log n) time.
@@ -32,13 +39,12 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='nump
         W (complex): complex ratio between points
         A (complex): complex starting point
         simple (bool): use simple algorithm? (very slow)
-        t_method (str): Toeplitz matrix multiplication method. 'ce' for 
+        t_method (str): Toeplitz matrix multiplication method. 'ce' for
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
             for simple matrix multiplication, 'scipy' for matmul_toeplitz
             from scipy.linalg.
-        f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
-            for recursive method. Ignored if you are using simple ICZT
-            method.
+        f_method (str): FFT method. 'numpy' for FFT from NumPy,
+        'recursive' for recursive method.
 
     Returns:
         np.ndarray: Chirp Z-transform
@@ -64,26 +70,22 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method='scipy', f_method='nump
         return X
 
     # Algorithm 1 from Sukhoy & Stoytchev 2019
-    k = np.arange(N)
-    X = W ** (k ** 2 / 2) * A ** -k * x
-    r = W ** (-(k ** 2) / 2)
-    k = np.arange(M)
-    c = W ** (-(k ** 2) / 2)
-    if t_method.lower() == 'ce':
-        X = _toeplitz_mult_ce(r, c, X, f_method)
-    elif t_method.lower() == 'pd':
-        X = _toeplitz_mult_pd(r, c, X, f_method)
-    elif t_method.lower() == 'mm':
-        X = np.matmul(toeplitz(c, r), X)
-    elif t_method.lower() == 'scipy':
-        X = matmul_toeplitz((c, r), X)
-    else:
-        print("t_method not recognized.")
-        raise ValueError
-    return W ** (k ** 2 / 2) * X
+    k = np.arange(max(M, N))
+    Wk22 = W ** (-(k ** 2) / 2)
+    r = Wk22[:M]
+    c = Wk22[:N]
+    X = r.conjugate() * A ** -k * x
+    try:
+        toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
+    except KeyError:
+        raise ValueError(
+            f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}"
+        )
+    X = toeplitz_mult(r, c, X, f_method)
+    return c.conjugate() * X
 
 
-def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='numpy'):
+def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="numpy"):
     """Calculate inverse Chirp Z-transform (ICZT).
 
     Uses an efficient algorithm. Solves in O(n log n) time.
@@ -97,14 +99,13 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='nump
         A (complex): complex starting point
         simple (bool): calculate ICZT using simple method (using CZT and
             conjugate)
-        t_method (str): Toeplitz matrix multiplication method. 'ce' for 
+        t_method (str): Toeplitz matrix multiplication method. 'ce' for
             circulant embedding, 'pd' for Pustylnikov's decomposition, 'mm'
             for simple matrix multiplication, 'scipy' for matmul_toeplitz
             from scipy.linalg. Ignored if you are not using the simple ICZT
             method.
-        f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
-            for recursive method. Ignored if you are not using the simple ICZT
-            method.
+        f_method (str): FFT method. 'numpy' for FFT from NumPy,
+        'recursive' for recursive method.
 
     Returns:
         np.ndarray: Inverse Chirp Z-transform
@@ -122,36 +123,46 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method='scipy', f_method='nump
 
     # Simple algorithm
     if simple:
-        return np.conj(czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)) / M
+        return (
+            np.conj(
+                czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)
+            )
+            / M
+        )
 
     # Algorithm 2 from Sukhoy & Stoytchev 2019
     if M != N:
-        print("M must be equal to N")
-        raise ValueError
+        raise ValueError("M must be equal to N")
     n = N
     k = np.arange(n)
-    x = W ** (-k ** 2 / 2) * X
-    p = np.empty(n, dtype=complex)
-    p[0] = 1
-    p[1:] = W ** k[1:] - 1
-    for ki in range(1, n):
-        p[ki] *= p[ki - 1]
-    u = (-1) ** k * W ** ((2 * k ** 2 - (2 * n - 1) * k + n * (n - 1)) / 2) / p
-    for ki in range(n):
-        u[ki] /= p[n - ki - 1]
+    Wk22 = W ** (-(k ** 2) / 2)
+    x = Wk22 * X
+    p = np.r_[1, (W ** k[1:] - 1).cumprod()]
+    u = (-1) ** k * W ** (k * (k - n + 0.5) + (n / 2 - 0.5) * n) / p
+    # equivalent to:
+    # u = (-1) ** k * W ** ((2 * k ** 2 - (2 * n - 1) * k + n * (n - 1)) / 2) / p
+    u /= p[::-1]
     z = np.zeros(n, dtype=complex)
-    uhat = np.r_[0, u[1::][::-1]]
-    util = np.r_[u[0], np.zeros(n-1)]
-    x1 = _toeplitz_mult_ce(uhat, z, x)
-    x1 = _toeplitz_mult_ce(z, uhat, x1)
-    x2 = _toeplitz_mult_ce(u, util, x)
-    x2 = _toeplitz_mult_ce(util, u, x2)
+    uhat = np.r_[0, u[-1:0:-1]]
+    util = np.r_[u[0], np.zeros(n - 1)]
+    try:
+        toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
+    except KeyError:
+        raise ValueError(
+            f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}"
+        )
+    # Note: there is difference in accuracy here depending on the method. Have to check.
+    x1 = toeplitz_mult(uhat, z, x, f_method)
+    x1 = toeplitz_mult(z, uhat, x1, f_method)
+    x2 = toeplitz_mult(u, util, x, f_method)
+    x2 = toeplitz_mult(util, u, x2, f_method)
     x = (x2 - x1) / u[0]
-    x = A ** k * W ** (-k ** 2 / 2) * x
+    x = A ** k * Wk22 * x
     return x
 
 
 # OTHER TRANSFORMS -----------------------------------------------------------
+
 
 def dft(t, x, f=None):
     """Transform signal from time- to frequency-domain using a Discrete
@@ -171,8 +182,8 @@ def dft(t, x, f=None):
 
     if f is None:
         dt = t[1] - t[0]  # time step
-        Fs = 1 / dt       # sample frequency
-        Nf = len(t)       # number of frequency points
+        Fs = 1 / dt  # sample frequency
+        Nf = len(t)  # number of frequency points
         Nf = Nf + 1 if Nf % 2 == 0 else Nf
         f = np.linspace(-Fs / 2, Fs / 2, Nf)
 
@@ -214,6 +225,7 @@ def idft(f, X, t=None):
 
 # FREQ <--> TIME-DOMAIN CONVERSION -------------------------------------------
 
+
 def time2freq(t, x, f=None, f_orig=None):
     """Convert signal from time-domain to frequency-domain.
 
@@ -231,16 +243,16 @@ def time2freq(t, x, f=None, f_orig=None):
     """
 
     # Input time array
-    dt = t[1] - t[0]           # time step
-    Nt = len(t)                # number of time points
-    Fs = 1 / dt                # sampling frequency
+    dt = t[1] - t[0]  # time step
+    Nt = len(t)  # number of time points
+    Fs = 1 / dt  # sampling frequency
 
     # Output frequency array
     if f is None:
         f = np.linspace(-Fs / 2, Fs / 2, Nt)
     f1, f2 = f.min(), f.max()  # start / stop
-    bw = f2 - f1               # bandwidth
-    Nf = len(f)                # number of frequency points
+    bw = f2 - f1  # bandwidth
+    Nf = len(f)  # number of frequency points
 
     # Correction factor (normalization)
     if f_orig is not None:
@@ -276,22 +288,22 @@ def freq2time(f, X, t=None, t_orig=None):
 
     # Input frequency
     f1, f2 = f.min(), f.max()  # start / stop frequency
-    df = f[1] - f[0]           # frequency step
-    bw = f2 - f1               # bandwidth
-    Nf = len(f)                # number of frequency points
-    t_alias = 1 / df           # alias-free interval
+    df = f[1] - f[0]  # frequency step
+    bw = f2 - f1  # bandwidth
+    Nf = len(f)  # number of frequency points
+    t_alias = 1 / df  # alias-free interval
 
     # Output time
     if t is None:
         t = np.linspace(0, t_alias, Nf)
     t1, t2 = t.min(), t.max()  # start / stop time
-    dt = t[1] - t[0]           # time step
-    Nt = len(t)                # number of time points
-    Fs = 1 / dt                # sampling frequency
+    dt = t[1] - t[0]  # time step
+    Nt = len(t)  # number of time points
+    Fs = 1 / dt  # sampling frequency
 
     # Correction factor (normalization)
     if t_orig is not None:
-        k = (t.max() - t.min()) / df / (t_orig.max() - t_orig.min()) **2
+        k = (t.max() - t.min()) / df / (t_orig.max() - t_orig.min()) ** 2
     else:
         k = 1
 
@@ -313,25 +325,26 @@ def freq2time(f, X, t=None, t_orig=None):
 
 # HELPER FUNCTIONS -----------------------------------------------------------
 
-def _toeplitz_mult_ce(r, c, x, f_method='numpy'):
+
+def _toeplitz_mult_ce(r, c, x, f_method="numpy"):
     """Multiply Toeplitz matrix by vector using circulant embedding.
-    
+
     See algorithm S1 in Sukhoy & Stoytchev 2019:
 
        Compute the product y = Tx of a Toeplitz matrix T and a vector x, where
-       T is specified by its first row r = (r[0], r[1], r[2],...,r[N-1]) and 
+       T is specified by its first row r = (r[0], r[1], r[2],...,r[N-1]) and
        its first column c = (c[0], c[1], c[2],...,c[M-1]), where r[0] = c[0].
-    
+
     Args:
         r (np.ndarray): first row of Toeplitz matrix
         c (np.ndarray): first column of Toeplitz matrix
         x (np.ndarray): vector to multiply the Toeplitz matrix
         f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
             for recursive method.
-    
+
     Returns:
         np.ndarray: product of Toeplitz matrix and vector x
-        
+
     """
     N = len(r)
     M = len(c)
@@ -340,32 +353,32 @@ def _toeplitz_mult_ce(r, c, x, f_method='numpy'):
     n = int(2 ** np.ceil(np.log2(M + N - 1)))
     assert n >= M
     assert n >= N
-    chat = np.r_[c, np.zeros(n - (M + N - 1)), r[-(N-1):][::-1]]
+    chat = np.r_[c, np.zeros(n - (M + N - 1)), r[-(N - 1) :][::-1]]
     xhat = _zero_pad(x, n)
     yhat = _circulant_multiply(chat, xhat, f_method)
     y = yhat[:M]
     return y
 
 
-def _toeplitz_mult_pd(r, c, x, f_method='numpy'):
+def _toeplitz_mult_pd(r, c, x, f_method="numpy"):
     """Multiply Toeplitz matrix by vector using Pustylnikov's decomposition.
-    
+
     See algorithm S3 in Sukhoy & Stoytchev 2019:
 
        Compute the product y = Tx of a Toeplitz matrix T and a vector x, where
        T is specified by its first row r = (r[0], r[1], r[2],...,r[N-1]) and
        its first column c = (c[0], c[1], c[2],...,c[M-1]), where r[0] = c[0].
-    
+
     Args:
         r (np.ndarray): first row of Toeplitz matrix
         c (np.ndarray): first column of Toeplitz matrix
         x (np.ndarray): vector to multiply the Toeplitz matrix
         f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
             for recursive method.
-    
+
     Returns:
         np.ndarray: product of Toeplitz matrix and vector x
-        
+
     """
     N = len(r)
     M = len(c)
@@ -384,22 +397,22 @@ def _toeplitz_mult_pd(r, c, x, f_method='numpy'):
     for k in range(1, n):
         c1[k] += r[n - k]
         c2[k] -= r[n - k]
-    y1 = _circulant_multiply(c1/2, x, f_method)
-    y2 = _skew_circulant_multiply(c2/2, x, f_method)
+    y1 = _circulant_multiply(c1 / 2, x, f_method)
+    y2 = _skew_circulant_multiply(c2 / 2, x, f_method)
     y = y1[:M] + y2[:M]
     return y
 
 
 def _zero_pad(x, n):
     """Zero pad an array x to length n by appending zeros.
-        
+
     Args:
         x (np.ndarray): array x
         n (int): length of output array
-        
+
     Returns:
         np.ndarray: array x with padding
-        
+
     """
     m = len(x)
     assert m <= n
@@ -408,34 +421,34 @@ def _zero_pad(x, n):
     return xhat
 
 
-def _circulant_multiply(c, x, f_method='numpy'):
+def _circulant_multiply(c, x, f_method="numpy"):
     """Multiply a circulant matrix by a vector.
-    
+
     Runs in O(n log n) time.
 
     See algorithm S4 in Sukhoy & Stoytchev 2019:
 
-       Compute the product y = Gx of a circulant matrix G and a vector x, 
+       Compute the product y = Gx of a circulant matrix G and a vector x,
        where G is generated by its first column c=(c[0], c[1],...,c[n-1]).
-    
+
     Args:
         c (np.ndarray): first column of circulant matrix G
         x (np.ndarray): vector x
-        f_method (str): FFT method. 'numpy' for FFT from NumPy, 'recursive'
-            for recursive method.
+        f_method (str): FFT method. 'numpy' for FFT from NumPy,
+        'recursive' for recursive method.
 
     Returns:
         np.ndarray: product Gx
-    
+
     """
     n = len(c)
     assert len(x) == n
-    if f_method == 'numpy':
+    if f_method == "numpy":
         C = np.fft.fft(c)
         X = np.fft.fft(x)
         Y = C * X
         return np.fft.ifft(Y)
-    elif f_method.lower() == 'recursive':
+    elif f_method.lower() == "recursive":
         C = _fft(c)
         X = _fft(x)
         Y = C * X
@@ -445,13 +458,13 @@ def _circulant_multiply(c, x, f_method='numpy'):
         raise ValueError
 
 
-def _skew_circulant_multiply(c, x, f_method='numpy'):
+def _skew_circulant_multiply(c, x, f_method="numpy"):
     """Multiply a skew-circulant matrix by a vector.
-    
+
     Runs in O(n log n) time.
-    
+
     See algorithm S7 in Sukhoy & Stoytchev 2019.
-    
+
     Args:
         c (np.ndarray): first column of skew-circulant matrix G
         x (np.ndarray): vector x
@@ -492,8 +505,8 @@ def _fft(x):
     k = np.arange(n // 2)
     w = np.exp(-2j * np.pi * k / n)
     y = np.empty(n, dtype=complex)
-    y[:n//2] = y1 + w * y2
-    y[n//2:] = y1 - w * y2
+    y[: n // 2] = y1 + w * y2
+    y[n // 2 :] = y1 - w * y2
     return y
 
 
@@ -517,6 +530,6 @@ def _ifft(y):
     k = np.arange(n // 2)
     w = np.exp(2j * np.pi * k / n)
     x = np.empty(n, dtype=complex)
-    x[:n//2] = (x1 + w * x2) / 2
-    x[n//2:] = (x1 - w * x2) / 2
+    x[: n // 2] = (x1 + w * x2) / 2
+    x[n // 2 :] = (x1 - w * x2) / 2
     return x
