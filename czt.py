@@ -15,7 +15,6 @@ CZT computation reference:
 
 import numpy as np
 from scipy.linalg import toeplitz, matmul_toeplitz
-from scipy.ndimage import convolve1d
 
 
 # CZT ------------------------------------------------------------------------
@@ -45,7 +44,6 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="scipy", f_method="nump
             for simple matrix multiplication, 'scipy' for matmul_toeplitz
             from scipy.linalg.
         f_method (str): FFT method. 'numpy' for FFT from NumPy,
-        'convolution' for circular convolution from ndimage,
         'recursive' for recursive method.
 
     Returns:
@@ -107,7 +105,6 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
             from scipy.linalg. Ignored if you are not using the simple ICZT
             method.
         f_method (str): FFT method. 'numpy' for FFT from NumPy,
-        'convolution' for circular convolution from ndimage,
         'recursive' for recursive method.
 
     Returns:
@@ -438,7 +435,6 @@ def _circulant_multiply(c, x, f_method="numpy"):
         c (np.ndarray): first column of circulant matrix G
         x (np.ndarray): vector x
         f_method (str): FFT method. 'numpy' for FFT from NumPy,
-        'convolution' for circular convolution from ndimage,
         'recursive' for recursive method.
 
     Returns:
@@ -452,8 +448,6 @@ def _circulant_multiply(c, x, f_method="numpy"):
         X = np.fft.fft(x)
         Y = C * X
         return np.fft.ifft(Y)
-    elif f_method == "convolution":
-        return np.fft.fftshift(convolve1d(c, x, mode="wrap"))
     elif f_method.lower() == "recursive":
         C = _fft(c)
         X = _fft(x)
