@@ -77,10 +77,10 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="scipy", f_method="nump
     c = Wk22[:N]
     X = r.conjugate() * A ** -k * x
     try:
-        toeplitz_mult = _available_t_methods[t_method]  # now this raises an index error
-    except IndexError:
+        toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
+    except KeyError:
         raise ValueError(
-            f"t_method {t_method} not recognized. Must be one of {_available_t_methods.keys()}"
+            f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}"
         )
     X = toeplitz_mult(r, c, X, f_method)
     return c.conjugate() * X
@@ -148,10 +148,10 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
     uhat = np.r_[0, u[-1:0:-1]]
     util = np.r_[u[0], np.zeros(n - 1)]
     try:
-        toeplitz_mult = _available_t_methods[t_method]  # now this raises an index error
-    except IndexError:
+        toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
+    except KeyError:
         raise ValueError(
-            f"t_method {t_method} not recognized. Must be one of {_available_t_methods.keys()}"
+            f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}"
         )
     # Note: there is difference in accuracy here depending on the method. Have to check.
     x1 = toeplitz_mult(uhat, z, x, f_method)
