@@ -72,9 +72,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="ce", f_method="numpy")
     try:
         toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
     except KeyError:
-        raise ValueError(
-            f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}"
-        )
+        raise ValueError(f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}")
     X = toeplitz_mult(r, c, X, f_method)
     return X / c
 
@@ -117,12 +115,7 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
 
     # Simple algorithm
     if simple:
-        return (
-            np.conj(
-                czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)
-            )
-            / M
-        )
+        return (np.conj(czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)) / M)
 
     # Algorithm 2 from Sukhoy & Stoytchev 2019
     if M != N:
@@ -142,9 +135,7 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
     try:
         toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
     except KeyError:
-        raise ValueError(
-            f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}"
-        )
+        raise ValueError(f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}")
     # Note: there is difference in accuracy here depending on the method. Have to check.
     x1 = toeplitz_mult(uhat, z, x, f_method)
     x1 = toeplitz_mult(z, uhat, x1, f_method)
