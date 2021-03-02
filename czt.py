@@ -18,12 +18,6 @@ from scipy.linalg import toeplitz, matmul_toeplitz
 
 
 # CZT ------------------------------------------------------------------------
-_available_t_methods = {
-    "ce": _toeplitz_mult_ce,
-    "pd": _toeplitz_mult_pd,
-    "mm": lambda r, c, x, _: np.matmul(toeplitz(c, r), x),
-    "scipy": lambda r, c, x, _: matmul_toeplitz((c, r), x),
-}
 
 
 def czt(x, M=None, W=None, A=1.0, simple=False, t_method="scipy", f_method="numpy"):
@@ -533,3 +527,11 @@ def _ifft(y):
     x[: n // 2] = (x1 + w * x2) / 2
     x[n // 2 :] = (x1 - w * x2) / 2
     return x
+
+
+_available_t_methods = {
+    "ce": _toeplitz_mult_ce,
+    "pd": _toeplitz_mult_pd,
+    "mm": lambda r, c, x, _: np.matmul(toeplitz(c, r), x),
+    "scipy": lambda r, c, x, _: matmul_toeplitz((c, r), x),
+}
