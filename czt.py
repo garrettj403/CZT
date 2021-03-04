@@ -235,6 +235,8 @@ def time2freq(t, x, f=None, f_orig=None):
     # Output frequency array
     if f is None:
         f = np.linspace(-Fs / 2, Fs / 2, Nt)
+    else:
+        f = np.copy(f)
     f1, f2 = f.min(), f.max()  # start / stop
     bw = f2 - f1  # bandwidth
     Nf = len(f)  # number of frequency points
@@ -281,6 +283,8 @@ def freq2time(f, X, t=None, t_orig=None):
     # Output time
     if t is None:
         t = np.linspace(0, t_alias, Nf)
+    else:
+        t = np.copy(t)
     t1, t2 = t.min(), t.max()  # start / stop time
     dt = t[1] - t[0]  # time step
     Nt = len(t)  # number of time points
