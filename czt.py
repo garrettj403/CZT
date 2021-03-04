@@ -68,7 +68,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="ce", f_method="numpy")
     Wk22 = W ** (-(k ** 2) / 2)
     r = Wk22[:N]
     c = Wk22[:M]
-    X = A ** -k * x / r
+    X = A ** -k[:N] * x / r
     try:
         toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
     except KeyError:
