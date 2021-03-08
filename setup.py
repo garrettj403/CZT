@@ -40,7 +40,7 @@ setup(
     version="0.0.5",
     author="John Garrett",
     author_email="garrettj403@gmail.com",
-    description="Chirp Z-transform implemented in Python",
+    description="Chirp Z-transform",
     license="MIT",
     url="https://github.com/garrettj403/CZT/",
     keywords=[
@@ -53,7 +53,7 @@ setup(
         'numpy',
         'scipy>=1.6.0',],
     extras_require={
-        'testing': ['pytest'],
+        'testing': ['pytest', 'perfplots'],
         'examples': ['matplotlib', 'scikit-rf',],},
     tests_require=['pytest'],
     cmdclass={'test': PyTest},
