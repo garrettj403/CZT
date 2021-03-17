@@ -26,7 +26,7 @@ perfplot.show(
     ],
     # labels=["simple", "ce", "pd", "mm", "scipy", "ce/recursive", "pd/recursive"],
     labels=["ce", "pd", "scipy"],
-    n_range=[10 ** k for k in range(1, 8)],
+    n_range=[10 ** k for k in range(1, 7)],
     xlabel="Input length",
     equality_check=np.allclose,
     target_time_per_measurement=0.1,
