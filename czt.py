@@ -68,7 +68,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="ce", f_method="numpy")
     Wk22 = W ** (-(k ** 2) / 2)
     r = Wk22[:N]
     c = Wk22[:M]
-    X = A ** -k * x / r
+    X = A ** -k[:N] * x / r
     try:
         toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
     except KeyError:
@@ -235,6 +235,8 @@ def time2freq(t, x, f=None, f_orig=None):
     # Output frequency array
     if f is None:
         f = np.linspace(-Fs / 2, Fs / 2, Nt)
+    else:
+        f = np.copy(f)
     f1, f2 = f.min(), f.max()  # start / stop
     bw = f2 - f1  # bandwidth
     Nf = len(f)  # number of frequency points
@@ -281,6 +283,8 @@ def freq2time(f, X, t=None, t_orig=None):
     # Output time
     if t is None:
         t = np.linspace(0, t_alias, Nf)
+    else:
+        t = np.copy(t)
     t1, t2 = t.min(), t.max()  # start / stop time
     dt = t[1] - t[0]  # time step
     Nt = len(t)  # number of time points
@@ -375,13 +379,8 @@ def _toeplitz_mult_pd(r, c, x, f_method="numpy"):
         x = _zero_pad(x, n)
     if M != n:
         c = _zero_pad(c, n)
-    c1 = np.empty(n, dtype=complex)
-    c2 = np.empty(n, dtype=complex)
-    c1 = c.copy()
-    c2 = c.copy()
-    for k in range(1, n):
-        c1[k] += r[n - k]
-        c2[k] -= r[n - k]
+    c1 = np.r_[c[0], c[1:]+r[-1:0:-1]]
+    c2 = np.r_[c[0], c[1:]-r[-1:0:-1]]
     y1 = _circulant_multiply(c1 / 2, x, f_method)
     y2 = _skew_circulant_multiply(c2 / 2, x, f_method)
     y = y1[:M] + y2[:M]
@@ -463,10 +462,11 @@ def _skew_circulant_multiply(c, x, f_method="numpy"):
     n = len(c)
     assert len(x) == n
     k = np.arange(n, dtype=float)
-    chat = c * np.exp(-1j * k * np.pi / n)
-    xhat = x * np.exp(-1j * k * np.pi / n)
+    prefac = np.exp(-1j * k * np.pi / n)
+    chat = c * prefac
+    xhat = x * prefac
     y = _circulant_multiply(chat, xhat, f_method)
-    y = y * np.exp(1j * k * np.pi / n)
+    y *= prefac.conjugate()
     return y
 
 
