@@ -114,7 +114,7 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
 
     # Simple algorithm
     if simple:
-        return (np.conj(czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)) / M)
+        return np.conj(czt(np.conj(X), M=N, W=W, A=A, t_method=t_method, f_method=f_method)) / M
 
     # Algorithm 2 from Sukhoy & Stoytchev 2019
     if M != N:
@@ -196,7 +196,7 @@ def idft(f, X, t=None):
         # Default to FFT time sweep
         Nf = len(f)
         df = f[1] - f[0]
-        f = np.fft.fftshift(np.fft.fftfreq(Nf, df))
+        t = np.fft.fftshift(np.fft.fftfreq(Nf, df))
 
     x = np.empty(len(t), dtype=complex)
     for n in range(len(t)):
@@ -209,97 +209,86 @@ def idft(f, X, t=None):
 # FREQ <--> TIME-DOMAIN CONVERSION -------------------------------------------
 
 def time2freq(t, x, f=None):
-    """Convert signal from time-domain to frequency-domain.
+    """Transform a time-domain signal to the frequency-domain.
 
     Args:
         t (np.ndarray): time
         x (np.ndarray): time-domain signal
-        f (np.ndarray): frequency for output signal
-        f_orig (np.ndarray): frequency sweep of the original signal, necessary
-            for normalization if the new frequency sweep is different from the
-            original
+        f (np.ndarray): frequency for output signal, optional, defaults to
+            standard FFT frequency sweep
 
     Returns:
-        np.ndarray: frequency-domain signal
+        frequency-domain signal
 
     """
 
     # Input time array
     dt = t[1] - t[0]
-    Nt = len(t)
+    nt = len(t)
 
     # Output frequency array
     if f is None:
         # Default to FFT frequency sweep
-        f = np.fft.fftshift(np.fft.fftfreq(Nt, dt))
+        f = np.fft.fftshift(np.fft.fftfreq(nt, dt))
     else:
         f = np.copy(f)
     fspan = f[-1] - f[0]
-    Nf = len(f)
-
-    # Step
-    W = np.exp(-2j * np.pi * fspan * dt / (Nf - 1))
+    nf = len(f)
 
     # Starting point
     A = np.exp(2j * np.pi * f[0] * dt)
 
+    # Step
+    W = np.exp(-2j * np.pi * fspan * dt / (nf - 1))
+
     # Frequency-domain transform
-    freq_data = czt(x, Nf, W, A)
+    freq_data = czt(x, nf, W, A)
 
     return f, freq_data
 
 
-def freq2time(f, X, t=None, t_orig=None):
-    """Convert signal from frequency-domain to time-domain.
+def freq2time(f, X, t=None):
+    """Transform a frequency-domain signal to the time-domain.
 
     Args:
         f (np.ndarray): frequency
         X (np.ndarray): frequency-domain signal
-        t (np.ndarray): time for output signal
-        t_orig (np.ndarray): original time-domain time
+        t (np.ndarray): time for output signal, optional, defaults to standard
+            FFT time sweep
 
     Returns:
-        np.ndarray: time-domain signal
+        time-domain signal
 
     """
 
     # Input frequency
-    f1, f2 = f.min(), f.max()  # start / stop frequency
-    df = f[1] - f[0]  # frequency step
-    bw = f2 - f1  # bandwidth
-    Nf = len(f)  # number of frequency points
-    t_alias = 1 / df  # alias-free interval
+    df = f[1] - f[0]
+    fspan = f[-1] - f[0]
+    nf = len(f)
 
     # Output time
     if t is None:
-        t = np.linspace(0, t_alias, Nf)
+        # Default to FFT time sweep
+        t = np.fft.fftshift(np.fft.fftfreq(nf, df))
     else:
         t = np.copy(t)
-    t1, t2 = t.min(), t.max()  # start / stop time
-    dt = t[1] - t[0]  # time step
-    Nt = len(t)  # number of time points
-    Fs = 1 / dt  # sampling frequency
-
-    # Correction factor (normalization)
-    if t_orig is not None:
-        k = (t.max() - t.min()) / df / (t_orig.max() - t_orig.min()) ** 2
-    else:
-        k = 1
-
-    # Step
-    W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
+    dt = t[1] - t[0]
+    nt = len(t)
 
     # Starting point
-    A = np.exp(2j * np.pi * t1 / t_alias)
+    A = np.exp(2j * np.pi * t[0] * df)
+
+    # Step
+    W = np.exp(-2j * np.pi * fspan * dt / (nf - 1))
 
     # Time-domain transform
-    time_data = iczt(X, N=Nt, W=W, A=A)
+    time_data = iczt(X, N=nt, W=W, A=A)
 
-    # Phase shift
+    # Phase correction
     n = np.arange(len(time_data))
-    phase = np.exp(2j * np.pi * f1 * n * dt)
+    phase = np.exp(2j * np.pi * f[0] * n * dt)
 
-    return t, time_data * phase / k
+    return t, time_data * phase
 
 
 # HELPER FUNCTIONS -----------------------------------------------------------
@@ -331,7 +320,7 @@ def _toeplitz_mult_ce(r, c, x, f_method="numpy"):
     n = int(2 ** np.ceil(np.log2(M + N - 1)))
     assert n >= M
     assert n >= N
-    chat = np.r_[c, np.zeros(n - (M + N - 1)), r[-(N - 1) :][::-1]]
+    chat = np.r_[c, np.zeros(n - (M + N - 1)), r[-(N - 1):][::-1]]
     xhat = _zero_pad(x, n)
     yhat = _circulant_multiply(chat, xhat, f_method)
     y = yhat[:M]
@@ -480,7 +469,7 @@ def _fft(x):
     w = np.exp(-2j * np.pi * k / n)
     y = np.empty(n, dtype=complex)
     y[: n // 2] = y1 + w * y2
-    y[n // 2 :] = y1 - w * y2
+    y[n // 2:] = y1 - w * y2
     return y
 
 
@@ -505,7 +494,7 @@ def _ifft(y):
     w = np.exp(2j * np.pi * k / n)
     x = np.empty(n, dtype=complex)
     x[: n // 2] = (x1 + w * x2) / 2
-    x[n // 2 :] = (x1 - w * x2) / 2
+    x[n // 2:] = (x1 - w * x2) / 2
     return x
 
 
