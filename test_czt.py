@@ -96,7 +96,7 @@ def test_compare_czt_fft_dft(debug=False):
     X_fft = np.fft.fftshift(np.fft.fft(x))
 
     # DFT (defaults to FFT settings)
-    _, X_dft = czt.dft(t, x, f=f)
+    _, X_dft = czt.dft(t, x)
 
     # Plot for debugging purposes
     if debug:
@@ -163,24 +163,15 @@ def test_czt_to_iczt(debug=False):
 def test_time_to_freq_to_time(debug=False):
     print("Test time -> freq -> time")
 
-    # TODO: revisit
-
     # Create time-domain data
     t1 = np.arange(0, 20e-3, 1e-4)
-    # dt = t1[1] - t1[0]
-    # fs = 1 / dt
-    #
-    # # Frequency sweep
-    # f = np.fft.fftshift(np.fft.fftfreq(len(t1)) * fs)
-
-    # Signal
     x1 = _signal_model(t1)
 
     # Frequency domain
     f, X = czt.time2freq(t1, x1)
 
     # Back to time domain
-    t2, x2 = czt.freq2time(f, X, t_orig=t1)
+    t2, x2 = czt.freq2time(f, X, t=t1)
 
     # Plot for debugging purposes
     if debug:
@@ -197,7 +188,7 @@ def test_time_to_freq_to_time(debug=False):
         plt.show()
 
     # Compare
-    np.testing.assert_allclose(x1, x2, atol=0.01)
+    np.testing.assert_almost_equal(x1, x2, decimal=12)
 
 
 def test_compare_iczt_idft(debug=False):
@@ -209,11 +200,11 @@ def test_compare_iczt_idft(debug=False):
     # Signal
     x = _signal_model(t)
 
-    # Frequency domain using CZT
-    f, X = czt.time2freq(t, x)
+    # Frequency domain using DFT
+    f, X = czt.dft(t, x)
 
     # Get time-domain using ICZT
-    _, x_iczt = czt.freq2time(f, X, t, t_orig=t)
+    _, x_iczt = czt.freq2time(f, X, t)
 
     # Get time-domain using IDFT
     _, x_idft = czt.idft(f, X, t)
@@ -232,9 +223,14 @@ def test_compare_iczt_idft(debug=False):
         plt.plot(t, x_iczt.real, 'g:', label="ICZT")
         plt.plot(t, x_idft.real, 'r--', label="IDFT")
         plt.legend()
+        plt.figure()
+        plt.title("Real: error")
+        plt.plot(t, x_iczt.real - x.real, 'k', label="Original")
         plt.show()
 
     # Compare
+    np.testing.assert_almost_equal(x_iczt, x, decimal=12)
+    np.testing.assert_almost_equal(x_idft, x, decimal=12)
     np.testing.assert_almost_equal(x_iczt, x_idft, decimal=12)
 
 
@@ -243,29 +239,47 @@ def test_frequency_zoom(debug=False):
 
     # Create time-domain data
     t = np.arange(0, 20e-3 + 1e-10, 1e-4)
+    dt = t[1] - t[0]
 
     # Signal
     x = _signal_model(t)
 
-    # CZT
-    f, X_czt1 = czt.time2freq(t, x)
-    
+    # Standard FFT frequency range
+    f = np.fft.fftshift(np.fft.fftfreq(len(t), dt))
+
     # DFT
-    _, X_dft1 = czt.dft(t, x, f=f)
+    f, X_dft1 = czt.dft(t, x, f=f)
+
+    # CZT
+    f, X_czt1 = czt.time2freq(t, x, f=f)
 
     # Truncate
     idx1, idx2 = 110, 180
     f_zoom = f[idx1:idx2]
     X_czt1, X_dft1 = X_czt1[idx1:idx2], X_dft1[idx1:idx2]
     
-    # Zoom CZT
-    _, X_czt2 = czt.time2freq(t, x, f_zoom, f_orig=f)
-    
     # Zoom DFT
     _, X_dft2 = czt.dft(t, x, f_zoom)
 
+    # Zoom CZT
+    _, X_czt2 = czt.time2freq(t, x, f_zoom)
+
     # Plot for debugging purposes
     if debug:
+        plt.figure()
+        plt.title("Imaginary")
+        plt.plot(f_zoom, np.imag(X_czt1), 'c', label='CZT')
+        plt.plot(f_zoom, np.imag(X_dft1), 'k--', label='DFT')
+        plt.plot(f_zoom, np.imag(X_czt2), 'r--', label='CZT (zoom)')
+        plt.plot(f_zoom, np.imag(X_dft2), 'b:', label='DFT (zoom)')
+        plt.legend()
+        plt.figure()
+        plt.title("Real")
+        plt.plot(f_zoom, np.real(X_czt1), 'c', label='CZT')
+        plt.plot(f_zoom, np.real(X_dft1), 'k--', label='DFT')
+        plt.plot(f_zoom, np.real(X_czt2), 'r--', label='CZT (zoom)')
+        plt.plot(f_zoom, np.real(X_dft2), 'b:', label='DFT (zoom)')
+        plt.legend()
         plt.figure()
         plt.title("Absolute")
         plt.plot(f_zoom, np.abs(X_czt1), 'c', label='CZT')
@@ -285,7 +299,7 @@ def test_compare_czt_to_analytic_expression(debug=False):
     print("Compare CZT to analytic expression")
 
     # Create time-domain data
-    t = np.arange(0, 50.01, 0.01) * 1e-3
+    t = np.linspace(0, 50, 10001) * 1e-3
 
     # Signal
     x = _signal_model(t)
@@ -297,7 +311,7 @@ def test_compare_czt_to_analytic_expression(debug=False):
     X = _signal_model_f(f, len(t))
 
     # Transform back to time-domain
-    _, x_iczt = czt.freq2time(f, X_czt, t)
+    _, x_iczt = czt.freq2time(f, X_czt, t=t)
 
     # Truncate
     mask = (0 < f) & (f < 5e3)
@@ -307,43 +321,39 @@ def test_compare_czt_to_analytic_expression(debug=False):
     if debug:
         plt.figure()
         plt.title("Freq-Domain: Imaginary")
-        plt.plot(f/1e3, X_czt.imag)
-        plt.plot(f/1e3, X.imag, 'r--')
+        plt.plot(f/1e3, X_czt.imag, label="CZT")
+        plt.plot(f/1e3, X.imag, 'r--', label="Analytic")
+        plt.legend()
         plt.figure()
         plt.title("Freq-Domain: Real")
-        plt.plot(f / 1e3, X_czt.real)
-        plt.plot(f / 1e3, X.real, 'r--')
+        plt.plot(f / 1e3, X_czt.real, label="CZT")
+        plt.plot(f / 1e3, X.real, 'r--', label="Analytic")
+        plt.legend()
         plt.figure()
         plt.title("Freq-Domain: Absolute")
-        plt.plot(f / 1e3, np.abs(X_czt))
-        plt.plot(f / 1e3, np.abs(X), 'r--')
-        plt.figure()
-        plt.title("Time-Domain: Imaginary")
-        plt.plot(t * 1e3, np.imag(x))
-        plt.plot(t * 1e3, np.imag(x_iczt), 'r--')
-        plt.xlim([0, 5])
-        plt.figure()
-        plt.title("Time-Domain: Real")
-        plt.plot(t * 1e3, np.real(x))
-        plt.plot(t * 1e3, np.real(x_iczt), 'r--')
-        plt.xlim([0, 5])
+        plt.plot(f / 1e3, np.abs(X_czt), label="CZT")
+        plt.plot(f / 1e3, np.abs(X), 'r--', label="Analytic")
+        plt.legend()
         plt.show()
 
     # Compare
-    np.testing.assert_allclose(X, X_czt, atol=0.02)
-    np.testing.assert_allclose(x, x_iczt, atol=0.02)
+    np.testing.assert_allclose(X, X_czt, atol=0.1)
+    np.testing.assert_almost_equal(x, x_iczt, decimal=12)
 
 
 def _signal_model(tt):
     """Generate time-domain signal for tests."""
+
     output = (1.0 * np.sin(2 * np.pi * 1e3 * tt) +
               0.3 * np.sin(2 * np.pi * 2e3 * tt) +
               0.1 * np.sin(2 * np.pi * 3e3 * tt)) * np.exp(-1e3 * tt)
+
     return output
 
 
 def _signal_model_f(ff, t_npts):
     """Generate frequency-domain signal for tests."""
+
     X1 = np.zeros_like(ff, dtype=complex)
     idx = np.abs(ff - 1e3).argmin()
     X1[idx] = 1 / 2j
@@ -357,10 +367,14 @@ def _signal_model_f(ff, t_npts):
     X1[idx] = 0.1 / 2j
     idx = np.abs(ff + 3e3).argmin()
     X1[idx] = -0.1 / 2j
+    
     X2 = 1 / (1e3 + 2j * np.pi * ff)
+
     X = np.convolve(X1, X2)
     X = X[len(X) // 4:-len(X) // 4 + 1]
+
     X *= (ff[1] - ff[0]) * t_npts
+
     return X
 
 
