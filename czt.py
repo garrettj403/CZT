@@ -165,9 +165,10 @@ def dft(t, x, f=None):
 
     if f is None:
         # Default to FFT frequency sweep
-        Nt = len(t)
-        dt = t[1] - t[0]
-        f = np.fft.fftshift(np.fft.fftfreq(Nt, dt))
+        nt = len(t)
+        tspan = t[-1] - t[0]
+        dt = tspan / (nt - 1)  # more accurate than t[1] - t[0]
+        f = np.fft.fftshift(np.fft.fftfreq(nt, dt))
 
     X = np.empty(len(f), dtype=complex)
     for k in range(len(f)):
@@ -194,9 +195,10 @@ def idft(f, X, t=None):
 
     if t is None:
         # Default to FFT time sweep
-        Nf = len(f)
-        df = f[1] - f[0]
-        t = np.fft.fftshift(np.fft.fftfreq(Nf, df))
+        nf = len(f)
+        fspan = f[-1] - f[0]
+        df = fspan / (nf - 1)  # more accurate than f[1] - f[0]
+        t = np.fft.fftshift(np.fft.fftfreq(nf, df))
 
     x = np.empty(len(t), dtype=complex)
     for n in range(len(t)):
@@ -223,8 +225,9 @@ def time2freq(t, x, f=None):
     """
 
     # Input time array
-    dt = t[1] - t[0]
     nt = len(t)
+    tspan = t[-1] - t[0]
+    dt = tspan / (nt - 1)  # more accurate than t[1] - t[0]
 
     # Output frequency array
     if f is None:
@@ -234,7 +237,7 @@ def time2freq(t, x, f=None):
         f = np.copy(f)
     nf = len(f)
     fspan = f[-1] - f[0]
-    df = fspan / (nf - 1)
+    df = fspan / (nf - 1)  # more accurate than f[1] - f[0]
 
     # Starting point
     A = np.exp(2j * np.pi * f[0] * dt)
@@ -242,8 +245,11 @@ def time2freq(t, x, f=None):
     # Step
     W = np.exp(-2j * np.pi * df * dt)
 
+    # Phase correction
+    phase = np.exp(-2j * np.pi * t[0] * f)
+
     # Frequency-domain transform
-    freq_data = czt(x, nf, W, A)
+    freq_data = czt(x, nf, W, A) * phase
 
     return f, freq_data
 
@@ -262,19 +268,20 @@ def freq2time(f, X, t=None):
 
     """
 
-    # Input frequency
+    # Input frequency array
     nf = len(f)
     fspan = f[-1] - f[0]
-    df = fspan / (nf - 1)
+    df = fspan / (nf - 1)  # more accurate than f[1] - f[0]
 
-    # Output time
+    # Output time array
     if t is None:
         # Default to FFT time sweep
         t = np.fft.fftshift(np.fft.fftfreq(nf, df))
     else:
         t = np.copy(t)
-    dt = t[1] - t[0]
     nt = len(t)
+    tspan = t[-1] - t[0]
+    dt = tspan / (nt - 1)  # more accurate than t[1] - t[0]
 
     # Starting point
     A = np.exp(2j * np.pi * t[0] * df)
@@ -282,13 +289,13 @@ def freq2time(f, X, t=None):
     # Step
     W = np.exp(-2j * np.pi * df * dt)
 
-    # Time-domain transform
-    time_data = iczt(X, N=nt, W=W, A=A)
-
     # Phase correction
     phase = np.exp(2j * np.pi * f[0] * t)
 
-    return t, time_data * phase
+    # Time-domain transform
+    time_data = iczt(X, N=nt, W=W, A=A) * phase
+
+    return t, time_data
 
 
 # HELPER FUNCTIONS -----------------------------------------------------------

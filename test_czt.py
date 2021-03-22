@@ -294,6 +294,51 @@ def test_frequency_zoom(debug=False):
     np.testing.assert_almost_equal(X_czt1, X_dft1, decimal=12)
     np.testing.assert_almost_equal(X_czt1, X_dft2, decimal=12)
 
+def test_time_zoom(debug=False):
+    print("Test time zoom")
+
+    # Create time-domain data
+    t = np.arange(0, 20e-3 + 1e-10, 1e-4)
+    dt = t[1] - t[0]
+
+    # Signal
+    x = _signal_model(t)
+
+    # Standard FFT frequency range
+    f = np.fft.fftshift(np.fft.fftfreq(len(t), dt))
+
+    # DFT
+    f, X = czt.dft(t, x, f=f)
+
+    # Time domain
+    t1, x1 = czt.freq2time(f, X, t=t)
+
+    # Time domain: zoom
+    t2 = t1[(0.001 <= t1) & (t1 <= 0.002)]
+    _, x2 = czt.freq2time(f, X, t=t2)
+
+    # Plot for debugging purposes
+    if debug:
+        plt.figure()
+        plt.title("Imaginary")
+        plt.plot(t, np.imag(x), 'c', label='Original')
+        plt.plot(t1, np.imag(x1), 'k:', label='freq2time: full')
+        plt.plot(t2, np.imag(x2), 'r--', label='freq2time: full')
+        plt.xlim([0, 0.003])
+        plt.legend()
+        plt.figure()
+        plt.title("Real")
+        plt.plot(t, np.real(x), 'c', label='Original')
+        plt.plot(t1, np.real(x1), 'k:', label='freq2time: full')
+        plt.plot(t2, np.real(x2), 'r--', label='freq2time: full')
+        plt.xlim([0, 0.003])
+        plt.legend()
+        plt.show()
+
+    # Compare
+    np.testing.assert_almost_equal(x, x1, decimal=12)
+    np.testing.assert_almost_equal(x[(0.001 <= t1) & (t1 <= 0.002)], x2, decimal=12)
+
 
 def test_compare_czt_to_analytic_expression(debug=False):
     print("Compare CZT to analytic expression")
@@ -380,10 +425,11 @@ def _signal_model_f(ff, t_npts):
 
 if __name__ == "__main__":
 
-    test_compare_different_czt_methods(debug=True)
-    test_compare_czt_fft_dft(debug=True)
-    test_czt_to_iczt(debug=True)
-    test_time_to_freq_to_time(debug=True)
-    test_compare_iczt_idft(debug=True)
-    test_frequency_zoom(debug=True)
-    test_compare_czt_to_analytic_expression(debug=True)
+    # test_compare_different_czt_methods(debug=True)
+    # test_compare_czt_fft_dft(debug=True)
+    # test_czt_to_iczt(debug=True)
+    # test_time_to_freq_to_time(debug=True)
+    # test_compare_iczt_idft(debug=True)
+    # test_frequency_zoom(debug=True)
+    test_time_zoom(debug=True)
+    # test_compare_czt_to_analytic_expression(debug=True)
