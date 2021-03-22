@@ -284,16 +284,16 @@ def freq2time(f, X, t=None):
     dt = tspan / (nt - 1)  # more accurate than t[1] - t[0]
 
     # Starting point
-    A = np.exp(2j * np.pi * t[0] * df)
+    A = np.exp(-2j * np.pi * t[0] * df)
 
     # Step
-    W = np.exp(-2j * np.pi * df * dt)
+    W = np.exp(2j * np.pi * df * dt)
 
     # Phase correction
     phase = np.exp(2j * np.pi * f[0] * t)
 
     # Time-domain transform
-    time_data = iczt(X, N=nt, W=W, A=A) * phase
+    time_data = czt(X, nt, W=W, A=A) * phase / nf
 
     return t, time_data
 
