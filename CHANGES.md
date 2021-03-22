@@ -1,3 +1,19 @@
+v0.0.6 (Mar 22, 2021)
+=====================
+
+- `czt`:
+	- `freq2time` and `time2freq`:
+		- Fix phase correction.
+		- Remove scaling factor (hack).
+		- Remove `t_orig` and `f_orig` arguments. Not needed anymore.
+		- Don't return original frequency/time in `time2freq` and `freq2time`. Instead make a copy of the Numpy array.
+	- Always default to FFT settings if output frequency/time array is not specified.
+	- Fix `M!=N` error in `czt.czt`. Use proper `k`-range.
+	- Optimize `pd` and `skew_circulant_multiply`. `pd` is now a similar speed as `scipy`.
+- Profiling:
+	- Add benchmarking scripts using `perfplot`.
+	- Add simple timing scripts.
+
 v0.0.5 (Mar 2, 2021)
 ====================
 
