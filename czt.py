@@ -19,7 +19,6 @@ from scipy.linalg import toeplitz, matmul_toeplitz
 
 # CZT ------------------------------------------------------------------------
 
-
 def czt(x, M=None, W=None, A=1.0, simple=False, t_method="ce", f_method="numpy"):
     """Calculate the Chirp Z-transform (CZT).
 
@@ -148,7 +147,6 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
 
 # OTHER TRANSFORMS -----------------------------------------------------------
 
-
 def dft(t, x, f=None):
     """Transform signal from time- to frequency-domain using a Discrete
     Fourier Transform (DFT).
@@ -166,14 +164,13 @@ def dft(t, x, f=None):
     """
 
     if f is None:
-        dt = t[1] - t[0]  # time step
-        Fs = 1 / dt  # sample frequency
-        Nf = len(t)  # number of frequency points
-        Nf = Nf + 1 if Nf % 2 == 0 else Nf
-        f = np.linspace(-Fs / 2, Fs / 2, Nf)
+        # Default to FFT frequency sweep
+        Nt = len(t)
+        dt = t[1] - t[0]
+        f = np.fft.fftshift(np.fft.fftfreq(Nt, dt))
 
     X = np.empty(len(f), dtype=complex)
-    for k in range(len(X)):
+    for k in range(len(f)):
         X[k] = np.sum(x * np.exp(-2j * np.pi * f[k] * t))
 
     return f, X
@@ -196,20 +193,20 @@ def idft(f, X, t=None):
     """
 
     if t is None:
-        bw = f.max() - f.min()
-        t = np.linspace(0, bw / 2, len(f))
+        # Default to FFT time sweep
+        Nf = len(f)
+        df = f[1] - f[0]
+        f = np.fft.fftshift(np.fft.fftfreq(Nf, df))
 
-    N = len(t)
-    x = np.empty(N, dtype=complex)
-    for n in range(len(x)):
+    x = np.empty(len(t), dtype=complex)
+    for n in range(len(t)):
         x[n] = np.sum(X * np.exp(2j * np.pi * f * t[n]))
-    x /= N
+    x /= len(t)
 
     return t, x
 
 
 # FREQ <--> TIME-DOMAIN CONVERSION -------------------------------------------
-
 
 def time2freq(t, x, f=None, f_orig=None):
     """Convert signal from time-domain to frequency-domain.
@@ -313,7 +310,6 @@ def freq2time(f, X, t=None, t_orig=None):
 
 
 # HELPER FUNCTIONS -----------------------------------------------------------
-
 
 def _toeplitz_mult_ce(r, c, x, f_method="numpy"):
     """Multiply Toeplitz matrix by vector using circulant embedding.
