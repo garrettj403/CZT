@@ -232,14 +232,15 @@ def time2freq(t, x, f=None):
         f = np.fft.fftshift(np.fft.fftfreq(nt, dt))
     else:
         f = np.copy(f)
-    fspan = f[-1] - f[0]
     nf = len(f)
+    fspan = f[-1] - f[0]
+    df = fspan / (nf - 1)
 
     # Starting point
     A = np.exp(2j * np.pi * f[0] * dt)
 
     # Step
-    W = np.exp(-2j * np.pi * fspan * dt / (nf - 1))
+    W = np.exp(-2j * np.pi * df * dt)
 
     # Frequency-domain transform
     freq_data = czt(x, nf, W, A)
@@ -262,9 +263,9 @@ def freq2time(f, X, t=None):
     """
 
     # Input frequency
-    df = f[1] - f[0]
-    fspan = f[-1] - f[0]
     nf = len(f)
+    fspan = f[-1] - f[0]
+    df = fspan / (nf - 1)
 
     # Output time
     if t is None:
@@ -279,14 +280,13 @@ def freq2time(f, X, t=None):
     A = np.exp(2j * np.pi * t[0] * df)
 
     # Step
-    W = np.exp(-2j * np.pi * fspan * dt / (nf - 1))
+    W = np.exp(-2j * np.pi * df * dt)
 
     # Time-domain transform
     time_data = iczt(X, N=nt, W=W, A=A)
 
     # Phase correction
-    n = np.arange(len(time_data))
-    phase = np.exp(2j * np.pi * f[0] * n * dt)
+    phase = np.exp(2j * np.pi * f[0] * t)
 
     return t, time_data * phase
 
