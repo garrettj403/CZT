@@ -208,7 +208,7 @@ def idft(f, X, t=None):
 
 # FREQ <--> TIME-DOMAIN CONVERSION -------------------------------------------
 
-def time2freq(t, x, f=None, f_orig=None):
+def time2freq(t, x, f=None):
     """Convert signal from time-domain to frequency-domain.
 
     Args:
@@ -225,35 +225,28 @@ def time2freq(t, x, f=None, f_orig=None):
     """
 
     # Input time array
-    dt = t[1] - t[0]  # time step
-    Nt = len(t)  # number of time points
-    Fs = 1 / dt  # sampling frequency
+    dt = t[1] - t[0]
+    Nt = len(t)
 
     # Output frequency array
     if f is None:
-        f = np.linspace(-Fs / 2, Fs / 2, Nt)
+        # Default to FFT frequency sweep
+        f = np.fft.fftshift(np.fft.fftfreq(Nt, dt))
     else:
         f = np.copy(f)
-    f1, f2 = f.min(), f.max()  # start / stop
-    bw = f2 - f1  # bandwidth
-    Nf = len(f)  # number of frequency points
-
-    # Correction factor (normalization)
-    if f_orig is not None:
-        k = 1 / (dt * (f_orig.max() - f_orig.min()))
-    else:
-        k = 1 / (dt * (f.max() - f.min()))
+    fspan = f[-1] - f[0]
+    Nf = len(f)
 
     # Step
-    W = np.exp(-2j * np.pi * bw / (Nf - 1) / Fs)
+    W = np.exp(-2j * np.pi * fspan * dt / (Nf - 1))
 
     # Starting point
-    A = np.exp(2j * np.pi * f1 / Fs)
+    A = np.exp(2j * np.pi * f[0] * dt)
 
     # Frequency-domain transform
     freq_data = czt(x, Nf, W, A)
 
-    return f, freq_data / k
+    return f, freq_data
 
 
 def freq2time(f, X, t=None, t_orig=None):
