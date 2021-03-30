@@ -423,8 +423,7 @@ def _circulant_multiply(c, x, f_method="numpy"):
         Y = C * X
         return _ifft(Y)
     else:
-        print("f_method not recognized.")
-        raise ValueError
+        raise ValueError("f_method not recognized.")
 
 
 def _skew_circulant_multiply(c, x, f_method="numpy"):
