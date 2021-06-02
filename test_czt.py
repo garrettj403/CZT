@@ -13,6 +13,7 @@ To run (with coverage):
 import numpy as np
 import matplotlib.pyplot as plt 
 import pytest
+import scipy
 
 import czt
 
@@ -25,6 +26,7 @@ def test_compare_different_czt_methods(debug=False):
     x = _signal_model(t)
 
     # Calculate CZT using different methods
+    X_czt0 = _czt(x)
     X_czt1 = czt.czt(x, simple=True)
     X_czt2 = czt.czt(x, t_method='ce')
     X_czt3 = czt.czt(x, t_method='pd')
@@ -76,10 +78,11 @@ def test_compare_different_czt_methods(debug=False):
         plt.show()
 
     # Compare Toeplitz matrix multiplication methods
-    np.testing.assert_almost_equal(X_czt1, X_czt2, decimal=12)
-    np.testing.assert_almost_equal(X_czt1, X_czt3, decimal=12)
-    np.testing.assert_almost_equal(X_czt1, X_czt4, decimal=12)
-    np.testing.assert_almost_equal(X_czt1, X_czt5, decimal=12)
+    np.testing.assert_almost_equal(X_czt0, X_czt1, decimal=12)
+    np.testing.assert_almost_equal(X_czt0, X_czt2, decimal=12)
+    np.testing.assert_almost_equal(X_czt0, X_czt3, decimal=12)
+    np.testing.assert_almost_equal(X_czt0, X_czt4, decimal=12)
+    np.testing.assert_almost_equal(X_czt0, X_czt5, decimal=12)
 
     # Compare FFT methods
     np.testing.assert_almost_equal(X_czt1, X_czt6, decimal=12)
@@ -452,13 +455,37 @@ def _signal_model_f(ff, t_npts):
     return X
 
 
+def _czt(x, M=None, W=None, A=1.0):
+    """Calculate CZT (Stripped down to the basics)."""
+
+    # Unpack arguments
+    N = len(x)
+    if M is None:
+        M = N
+    if W is None:
+        W = np.exp(-2j * np.pi / M)
+    A = np.complex128(A)
+    W = np.complex128(W)
+
+    # CZT algorithm
+    k = np.arange(max(M, N))
+    Wk22 = W ** (-(k ** 2) / 2)
+    r = Wk22[:N]
+    c = Wk22[:M]
+    X = A ** -k[:N] * x / r
+    X = scipy.linalg.matmul_toeplitz((c, r), X)
+    X /= c
+
+    return X
+
+
 if __name__ == "__main__":
 
-    # test_compare_different_czt_methods(debug=True)
+    test_compare_different_czt_methods(debug=True)
     # test_compare_czt_fft_dft(debug=True)
     # test_czt_to_iczt(debug=True)
     # test_time_to_freq_to_time(debug=True)
     # test_compare_iczt_idft(debug=True)
     # test_frequency_zoom(debug=True)
-    test_time_zoom(debug=True)
+    # test_time_zoom(debug=True)
     # test_compare_czt_to_analytic_expression(debug=True)
