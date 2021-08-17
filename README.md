@@ -34,13 +34,13 @@ Consider the following time-domain signal:
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/signal.png" width="500">
 </p>
 
-This is an exponentially decaying sine wave with some distortion from higher-order frequencies. We can convert the signal to the frequency-domain to investigate the frequency content using the Inverse Chirp Z-Transform (ICZT):
+This is an exponentially decaying sine wave with some distortion from higher-order frequencies. We can convert this signal to the frequency-domain to investigate the frequency content using the Chirp Z-Transform (CZT):
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/freq-domain.png" width="500">
 </p>
 
-Note that the ICZT also allows us to calculate the frequency response over an arbitrary frequency range:
+Note that the CZT also allows us to calculate the frequency response over an arbitrary frequency range:
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/zoom-czt.png" width="500">
@@ -52,7 +52,7 @@ We can see that the signal has frequency components at 1 kHz, 2.5 kHz and 3.5 kH
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/windowed-freq-domain.png" width="500">
 </p>
 
-Finally, we can use the CZT to transform back to the time domain:
+Finally, we can use the Inverse Chirp Z-Transform (ICZT) to transform back to the time domain:
 
 <p align="center">
 <img src="https://raw.githubusercontent.com/garrettj403/CZT/main/examples/results/windowed-time-domain.png" width="500">
@@ -60,7 +60,7 @@ Finally, we can use the CZT to transform back to the time domain:
 
 As we can see, we were able to remove the higher-order frequencies that were distorting our 1 kHz signal.
 
-You can find this example and others in the [``examples/`` directory.](https://github.com/garrettj403/CZT/blob/main/examples/)
+You can find this example and others in the [``examples/``](https://github.com/garrettj403/CZT/blob/main/examples/)  directory.
 
 References
 ----------
