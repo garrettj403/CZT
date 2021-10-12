@@ -8,8 +8,6 @@ from os import path
 from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
-import czt
-
 root = path.abspath(path.dirname(__file__))
 
 def read(*filenames, **kwargs):
