@@ -1,3 +1,14 @@
+v0.0.7 (Oct 12, 2021)
+=====================
+
+- Bugs:
+   - Remove `import czt` from `setup.py`. This was causing a circular dependency.
+- Testing:
+   - Compare this package against a stripped down version of the CZT algorithm.
+   - Improve testing coverage.
+- Examples:
+   - Plot residuals in examples.
+
 v0.0.6 (Mar 22, 2021)
 =====================
 

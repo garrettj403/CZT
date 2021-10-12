@@ -34,8 +34,7 @@ class PyTest(TestCommand):
 
 setup(
     name="czt",
-    # version=czt.__version__,
-    version="0.0.6",
+    version="0.0.7",
     author="John Garrett",
     author_email="garrettj403@gmail.com",
     description="Chirp Z-transform",
