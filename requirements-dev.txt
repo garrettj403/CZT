@@ -1,0 +1,7 @@
+# From requirements.txt
+numpy
+scipy>=1.6.0
+
+# Dev additions
+pytest
+matplotlib
