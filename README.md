@@ -2,6 +2,7 @@ Chirp Z-Transform (CZT)
 =======================
 
 [![PyPI version](https://badge.fury.io/py/czt.svg)](https://badge.fury.io/py/czt)
+[![ci](https://github.com/garrettj403/CZT/actions/workflows/ci.yml/badge.svg)](https://github.com/garrettj403/CZT/actions/workflows/ci.yml)
 
 From [Wikipedia](https://en.wikipedia.org/wiki/Chirp_Z-transform):
 
