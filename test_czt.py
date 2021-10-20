@@ -11,7 +11,7 @@ To run (with coverage):
 """
 
 import numpy as np
-import matplotlib.pyplot as plt 
+import matplotlib.pyplot as plt
 import pytest
 import scipy
 
@@ -271,7 +271,7 @@ def test_frequency_zoom(debug=False):
     idx1, idx2 = 110, 180
     f_zoom = f[idx1:idx2]
     X_czt1, X_dft1 = X_czt1[idx1:idx2], X_dft1[idx1:idx2]
-    
+
     # Zoom DFT
     _, X_dft2 = czt.dft(t, x, f_zoom)
 
@@ -315,7 +315,7 @@ def test_time_zoom(debug=False):
     # Create time-domain data
     t = np.arange(0, 20e-3 + 1e-10, 1e-4)
     x = _signal_model(t)
-    dt = t[1] - t[0]
+    # dt = t[1] - t[0]
 
     # Generate frequency-domain signal using DFT
     f, X = czt.dft(t, x)
@@ -397,7 +397,7 @@ def test_compare_czt_to_analytic_expression(debug=False):
 def _signal_model(tt):
     """Generate time-domain signal for tests.
 
-    Exponentially decaying sine wave with distortion from higher-order 
+    Exponentially decaying sine wave with distortion from higher-order
     frequencies.
 
     Args:
@@ -444,7 +444,7 @@ def _signal_model_f(ff, t_npts):
     X1[idx] = 0.1 / 2j
     idx = np.abs(ff + 3e3).argmin()
     X1[idx] = -0.1 / 2j
-    
+
     X2 = 1 / (1e3 + 2j * np.pi * ff)
 
     X = np.convolve(X1, X2)

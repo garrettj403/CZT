@@ -25,21 +25,33 @@ x = model(t)
 def test1():
     czt.czt(x, simple=True)
     return
+
+
 def test2():
     czt.czt(x, t_method='ce')
     return
+
+
 def test3():
     czt.czt(x, t_method='pd')
     return
+
+
 def test4():
     czt.czt(x, t_method='mm')
     return
+
+
 def test5():
     czt.czt(x, t_method='scipy')
     return
+
+
 def test6():
     czt.czt(x, t_method='ce', f_method='recursive')
     return
+
+
 def test7():
     czt.czt(x, t_method='pd', f_method='recursive')
     return

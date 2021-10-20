@@ -6,8 +6,8 @@ import perfplot
 
 
 def model(t):
-    output = (1.0 * np.sin(2 * np.pi * 1e3 * t) + 
-              0.3 * np.sin(2 * np.pi * 2e3 * t) + 
+    output = (1.0 * np.sin(2 * np.pi * 1e3 * t) +
+              0.3 * np.sin(2 * np.pi * 2e3 * t) +
               0.1 * np.sin(2 * np.pi * 3e3 * t)) * np.exp(-1e3 * t)
     return output
 
