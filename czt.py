@@ -2,20 +2,19 @@
 
 CZT reference:
 
-   Lawrence R. Rabiner, Ronald W. Schafer, and Charles M. Rader, "The chirp 
-   z-transform algorithm and its application," Bell Syst. Tech. J. 48, 
+   Lawrence R. Rabiner, Ronald W. Schafer, and Charles M. Rader, "The chirp
+   z-transform algorithm and its application," Bell Syst. Tech. J. 48,
    1249-1292 (1969).
 
 CZT computation reference:
 
-    Sukhoy, V., Stoytchev, A. "Generalizing the inverse FFT off the unit 
-    circle," Sci Rep 9, 14443 (2019). 
+    Sukhoy, V., Stoytchev, A. "Generalizing the inverse FFT off the unit
+    circle," Sci Rep 9, 14443 (2019).
 
 """
 
 import numpy as np
-from scipy.linalg import toeplitz, matmul_toeplitz
-
+from scipy.linalg import matmul_toeplitz, toeplitz
 
 # CZT ------------------------------------------------------------------------
 
