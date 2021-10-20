@@ -18,4 +18,4 @@ jobs:
           pip install flake8
       - name: Analysing the code with flake8
         run: |
-          flake8 czt.py
+          flake8 .
