@@ -69,7 +69,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="ce", f_method="numpy")
     c = Wk22[:M]
     X = A ** -k[:N] * x / r
     try:
-        toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
+        toeplitz_mult = _available_t_methods[t_method]
     except KeyError:
         raise ValueError(f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}")
     X = toeplitz_mult(r, c, X, f_method)
@@ -79,7 +79,7 @@ def czt(x, M=None, W=None, A=1.0, simple=False, t_method="ce", f_method="numpy")
 def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="numpy"):
     """Calculate inverse Chirp Z-transform (ICZT).
 
-    Uses an efficient algorithm. Solves in O(n log n) time.
+    Solves in O(n log n) time.
 
     See algorithm 2 in Sukhoy & Stoytchev 2019.
 
@@ -132,7 +132,7 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
     uhat = np.r_[0, u[-1:0:-1]]
     util = np.r_[u[0], np.zeros(n - 1)]
     try:
-        toeplitz_mult = _available_t_methods[t_method]  # now this raises an key error
+        toeplitz_mult = _available_t_methods[t_method]
     except KeyError:
         raise ValueError(f"t_method {t_method} not recognized. Must be one of {list(_available_t_methods.keys())}")
     # Note: there is difference in accuracy here depending on the method. Have to check.
@@ -145,13 +145,12 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
     return x
 
 
-# OTHER TRANSFORMS -----------------------------------------------------------
+# DFT ------------------------------------------------------------------------
 
 def dft(t, x, f=None):
-    """Transform signal from time- to frequency-domain using a Discrete
-    Fourier Transform (DFT).
+    """Calculate the Discrete Fourier Transform (DFT).
 
-    Used for testing CZT algorithm.
+    Simple implementation. Used for testing CZT algorithm.
 
     Args:
         t (np.ndarray): time
@@ -178,10 +177,9 @@ def dft(t, x, f=None):
 
 
 def idft(f, X, t=None):
-    """Transform signal from time- to frequency-domain using an Inverse
-    Discrete Fourier Transform (IDFT).
+    """Calculate the Inverse Discrete Fourier Transform (IDFT).
 
-    Used for testing the ICZT algorithm.
+    Simple implementation. Used for testing the ICZT algorithm.
 
     Args:
         f (np.ndarray): frequency
@@ -208,7 +206,7 @@ def idft(f, X, t=None):
     return t, x
 
 
-# FREQ <--> TIME-DOMAIN CONVERSION -------------------------------------------
+# TIME-DOMAIN <--> FREQUENCY-DOMAIN ------------------------------------------
 
 def time2freq(t, x, f=None):
     """Transform a time-domain signal to the frequency-domain.
@@ -383,11 +381,7 @@ def _zero_pad(x, n):
         np.ndarray: array x with padding
 
     """
-    m = len(x)
-    assert m <= n
-    xhat = np.zeros(n, dtype=complex)
-    xhat[:m] = x
-    return xhat
+    return np.pad(x, (0, n - len(x)))
 
 
 def _circulant_multiply(c, x, f_method="numpy"):
