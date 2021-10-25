@@ -10,12 +10,8 @@
 *.py.bak
 *.pyc
 
-TASKS.md
 new-version.md
 
-misc/ 
-my-projects/
-old/
 references/
 
 build/
