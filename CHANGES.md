@@ -1,3 +1,12 @@
+v0.0.8 (unreleased)
+===================
+
+- Testing:
+	- Add continuous integration via GitHub actions (testing, linting)
+- Misc:
+	- Remove lint (unnecessary code)
+	- Clean up comments
+
 v0.0.7 (Oct 12, 2021)
 =====================
 
