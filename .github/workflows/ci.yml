@@ -20,10 +20,14 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v2
-      - uses: conda-incubator/setup-miniconda@v2
+      - name: Git clone
+        uses: actions/checkout@v2
+      - name: Set up virtual environment
+        uses: conda-incubator/setup-miniconda@v2
         with:
           python-version: ${{ matrix.python-version }}
+          channels: defaults, conda-forge
+          miniconda-version: "latest"
       - name: Cache pip
         uses: actions/cache@v2
         with:
