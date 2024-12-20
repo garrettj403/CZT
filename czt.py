@@ -302,6 +302,42 @@ def freq2time(f, X, t=None):
     return t, time_data
 
 
+# SHORTHAND ------------------------------------------------------------------
+
+def t2f(t, x, f=None):
+    """Transform a time-domain signal to the frequency-domain.
+
+    Args:
+        t (np.ndarray): time
+        x (np.ndarray): time-domain signal
+        f (np.ndarray): frequency for output signal, optional, defaults to
+            standard FFT frequency sweep
+
+    Returns:
+        frequency-domain signal
+
+    """
+
+    return time2freq(t, x, f=f)
+
+
+def f2t(f, X, t=None):
+    """Transform a frequency-domain signal to the time-domain.
+
+    Args:
+        f (np.ndarray): frequency
+        X (np.ndarray): frequency-domain signal
+        t (np.ndarray): time for output signal, optional, defaults to standard
+            FFT time sweep
+
+    Returns:
+        time-domain signal
+
+    """
+
+    return freq2time(f, X, t=t)
+
+
 # HELPER FUNCTIONS -----------------------------------------------------------
 
 def _toeplitz_mult_ce(r, c, x, f_method="numpy"):
