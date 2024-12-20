@@ -186,10 +186,10 @@ def test_time_to_freq_to_time(debug=False):
     x1 = _signal_model(t1)
 
     # Frequency domain
-    f, X = czt.time2freq(t1, x1)
+    f, X = czt.t2f(t1, x1)
 
     # Back to time domain
-    t2, x2 = czt.freq2time(f, X, t=t1)
+    t2, x2 = czt.f2t(f, X, t=t1)
 
     # Plot for debugging purposes
     if debug:
