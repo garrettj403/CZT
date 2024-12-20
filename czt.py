@@ -123,11 +123,17 @@ def iczt(X, N=None, W=None, A=1.0, simple=True, t_method="scipy", f_method="nump
     k = np.arange(n)
     Wk22 = W ** (-(k ** 2) / 2)
     x = Wk22 * X
-    p = np.r_[1, (W ** k[1:] - 1).cumprod()]
-    u = (-1) ** k * W ** (k * (k - n + 0.5) + (n / 2 - 0.5) * n) / p
-    # equivalent to:
-    # u = (-1) ** k * W ** ((2 * k ** 2 - (2 * n - 1) * k + n * (n - 1)) / 2) / p
-    u /= p[::-1]
+    
+    # See https://github.com/garrettj403/CZT/issues/17
+    u = (-1) ** k * W ** (k * (k - n + 0.5) + (n / 2 - 0.5) * n) # /p is removed from here (1)
+    p = np.r_[1, W ** k[1:] - 1]
+    lp = np.abs(p) # lp stand for ln(p)
+    lp = np.cumsum(np.log(lp)) + np.angle(np.cumprod(p/lp))*1j
+    # above seperate the magnitude and angle of the entries in p
+    # it cumsum magnitude in log domain to replace the unstable cumprod of the magnitude
+    # and cumprod only the normalized angle to ensure the angle is also stable when X is long
+    u /= np.exp(lp+lp[::-1]) # /p from (1) is moved to here as +lp in exp()
+
     z = np.zeros(n, dtype=complex)
     uhat = np.r_[0, u[-1:0:-1]]
     util = np.r_[u[0], np.zeros(n - 1)]
